@@ -11,9 +11,9 @@ public class GameEntry : MonoBehaviour
         // Test Data
         List<CharacterData.SkillData> skillList = new List<CharacterData.SkillData>()
         {
-            new CharacterData.SkillData(1, 5, 10),
-            new CharacterData.SkillData(2, 6),
-            new CharacterData.SkillData(3, 7, 5),
+            new CharacterData.SkillData(1, 3, 10, CharacterData.SkillData.RangeType.Point), // skillID, coolDownTime, rangeType
+            new CharacterData.SkillData(2, 4),
+            new CharacterData.SkillData(3, 5, 5),
         };
         CharacterData data = new CharacterData(new CharacterData.RoleData("PlayerA", 100), skillList);
 
@@ -24,7 +24,6 @@ public class GameEntry : MonoBehaviour
         // build UI
         for (int i = 0; i < skillList.Count; i++)
             skillPanel.InitData(skillList[i].id);
-
     }
 
     GameObject CreateCharacter(CharacterData characterData)
@@ -43,6 +42,11 @@ public class GameEntry : MonoBehaviour
         var playerBloodRect = playerBlood.GetComponent<RectTransform>();
         playerBloodRect.localPosition = new Vector3(0, playerHeight, 0);
         bloodController.Init(characterData.roleData.health);
+
+        // skillIndicator UI
+        var indicatorPrefabs = Resources.Load<GameObject>("UI/CharacterSkillIndicator");
+        GameObject.Instantiate<GameObject>(indicatorPrefabs, playerObj.transform);
+
         return playerObj;
     }
 }

@@ -14,7 +14,7 @@ public class CharacterData
         public bool isAlive;
         public float moveSpeed = 5f;
         public float rotateSmoothTime = 1f;
-        public float rotateSpeedMovement = 0.1f;
+        public float rotateSpeedMovement = 0.5f;
         public float moveSpeedDampTime = 0.1f;
         public RoleData() { }
 
@@ -30,12 +30,15 @@ public class CharacterData
     [System.Serializable]
     public class SkillData
     {
-        public enum RangeType
+        public enum RangeType // 对应不同的 indicator
         {
-            Circle,
-            DirectLine,
-            ArcShaped,
+            None = 0,
+            Point = 1,
+            ArcShaped = 2,
+            Circle = 3,
+            DirectLine = 4,
         }
+
         public enum SkillEffect
         {
             Poisoning,
@@ -45,13 +48,14 @@ public class CharacterData
         public int id;
         public float coolDownTime;
         public bool isCoolDowning;
+        public float velocity = 10f; // tmp
         public float maxAttackRadius;
         public string damageFormula;
         public RangeType rangeType;
         public SkillEffect[] skillEffects;
         public SkillData() { }
 
-        public SkillData(int id, float coolDownTime, float maxAttackRadius = 0f, RangeType rangeType = RangeType.Circle, SkillEffect[] skillEffects = null)
+        public SkillData(int id, float coolDownTime, float maxAttackRadius = 0f, RangeType rangeType = RangeType.None, SkillEffect[] skillEffects = null)
         {
             this.id = id;
             this.coolDownTime = coolDownTime;

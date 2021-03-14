@@ -12,7 +12,7 @@ public class SkillPanelItem : MonoBehaviour
 
     private int skillId = -1;
 
-    void Start()
+    void Awake()
     {
         btn = GetComponent<Button>();
         bgImg = transform.Find("bg").GetComponent<Image>();
@@ -32,28 +32,30 @@ public class SkillPanelItem : MonoBehaviour
 
     private void OnBtnClick()
     {
-        Debug.Log(string.Format("click skillId = {0}", skillId));
-        if (skillId == -1) 
-            return;
+        if (skillId == -1) return; // 空技能槽不触发选择
         SendMessageUpwards("OnSelectSkill", skillId);
+        Debug.Log(string.Format("click skillId = {0}", skillId));
     }
 
     public void CoolDown (float coolDownTime)
     {
-        if (coolDownTime <= 0) coolDownTime = 0.01f;
+        if (coolDownTime <= 0) coolDownTime = 0.01f; // be safe, division 0
         StartCoroutine(CDTween(coolDownTime));
     }
 
     IEnumerator CDTween(float coolDownTime)
     {
         fillImg.fillAmount = 0;
-        var endTime = Time.realtimeSinceStartup + coolDownTime;
-        while (Time.realtimeSinceStartup < endTime)
+        var startTime = Time.realtimeSinceStartup;
+        var endTime = startTime + coolDownTime;
+        while (Time.realtimeSinceStartup <= endTime)
         {
-            fillImg.fillAmount += 1 / coolDownTime * Time.deltaTime;
+            float passTime = Time.realtimeSinceStartup - startTime;
+            fillImg.fillAmount = passTime / coolDownTime;
             yield return new WaitForSeconds(0.02f);
         }
         SendMessageUpwards("OnCoolDownOK", skillId);
+        Debug.Log(string.Format("coolDownFinish skillId = {0}, cd耗时={1}", skillId, Time.realtimeSinceStartup - startTime));
         fillImg.fillAmount = 1;
     }
 }
