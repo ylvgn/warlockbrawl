@@ -4,49 +4,55 @@ using UnityEngine;
 
 public class GameEntry : MonoBehaviour
 {
-    public SkillPanel skillPanel;
+    public UISkillPanel UISkillPanel;
+    public GameObject UIIndicatorPrefab;
+    public GameObject UIHUDPrefab;
 
     void Start()
     {
         // Test Data
-        List<CharacterData.SkillData> skillList = new List<CharacterData.SkillData>()
+        List<SkillData> skillList = new List<SkillData>()
         {
-            new CharacterData.SkillData(1, 3, 10, CharacterData.SkillData.RangeType.Point), // skillID, coolDownTime, rangeType
-            new CharacterData.SkillData(2, 4),
-            new CharacterData.SkillData(3, 5, 5),
+            new SkillData(1, "Fireball", "Effect/FireBall", 3, 10, RangeType.Point),
+            new SkillData(2, "RecoverHP", "Effect/FireBall", 4),
+            new SkillData(3, "SnowStorm", "Effect/FireBall", 5, 10, RangeType.Circle),
         };
-        CharacterData data = new CharacterData(new CharacterData.RoleData("PlayerA", 100), skillList);
+        CharacterData characterData = new CharacterData("MyCharacter");
 
-        // build Model
-        var Player = CreateCharacter(data);
-        Player.AddComponent<PlayerController>();
+        var myCharacter = CreateCharacter(characterData);
+        foreach(var skillData in skillList) {
+            myCharacter.LearnSkill(skillData);
+            UISkillPanel.AddSkill(skillData);
+        }
 
-        // build UI
-        for (int i = 0; i < skillList.Count; i++)
-            skillPanel.InitData(skillList[i].id);
+        BuildHUD(myCharacter);
+        BuildSkillIndicator(myCharacter);
+        myCharacter.gameObject.AddComponent<PlayerController>();
     }
 
-    GameObject CreateCharacter(CharacterData characterData)
+    Character CreateCharacter(CharacterData characterData)
     {
-        // player obj
         var playerPrefabs = Resources.Load<GameObject>(("Player/Mage"));
         GameObject playerObj = GameObject.Instantiate<GameObject>(playerPrefabs, Vector3.zero, Quaternion.identity);
         var character = playerObj.GetComponent<Character>();
         character.SetData(characterData);
+        return character;
+    }
 
-        // blood UI
-        var bloodPrefabs = Resources.Load<GameObject>(("UI/CharacterBlood"));
+    HUD BuildHUD(Character character)
+    {
         var playerHeight = character.characterController.height;
-        var playerBlood = GameObject.Instantiate<GameObject>(bloodPrefabs, playerObj.transform);
-        var bloodController = playerBlood.GetComponent<CharacterBlood>();
-        var playerBloodRect = playerBlood.GetComponent<RectTransform>();
-        playerBloodRect.localPosition = new Vector3(0, playerHeight, 0);
-        bloodController.Init(characterData.roleData.health);
+        var obj = GameObject.Instantiate<GameObject>(UIHUDPrefab, character.transform);
+        var res = obj.GetComponent<HUD>();
+        var HUDRect = obj.GetComponent<RectTransform>();
+        HUDRect.localPosition = new Vector3(0, playerHeight, 0);
+        res.Init(character.CharacterData.maxHP);
+        return res;
+    }
 
-        // skillIndicator UI
-        var indicatorPrefabs = Resources.Load<GameObject>("UI/CharacterSkillIndicator");
-        GameObject.Instantiate<GameObject>(indicatorPrefabs, playerObj.transform);
-
-        return playerObj;
+    UISkillIndicator BuildSkillIndicator(Character character)
+    {
+        var res = GameObject.Instantiate<GameObject>(UIIndicatorPrefab, character.transform).GetComponent<UISkillIndicator>();
+        return res;
     }
 }

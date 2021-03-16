@@ -5,46 +5,29 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
-    private Character character;
-    private CharacterSkillIndicator indicatorController; // 技能引导UI
-    private CharacterBlood characterBlood;
-
-    public static PlayerController Instance;
+    public Character character;
+    public UISkillIndicator indicatorController;
+    private HUD HUD;
+    public static PlayerController Instance => _instance;
+    static PlayerController _instance = null;
 
     void Start()
     {
-        if (Instance == null) 
-            Instance = this;
+        if (_instance != null) {
+            GameObject.Destroy(_instance); 
+            Debug.LogError("重复出现 PlayerController.instance");
+        }
+        _instance = this;
 
-        character = GetComponent<Character>();
-        indicatorController = transform.GetComponentInChildren<CharacterSkillIndicator>();
-        characterBlood = transform.GetComponentInChildren<CharacterBlood>();
-
-        // 选择了某个技能
-        SkillPanel.OnClickSkill += (skillId) =>
-        {
-            character.SelectSkill(skillId);
-        };
-
-        // 技能冷却完毕
-        SkillPanel.OnCoolDownFinished += (skillId) =>
-        {
-            character.CoolDownFinish(skillId);
-        };
-
-        // 掉血 tmp
-        Character.OnGetHurt += (characterData) =>
-        {
-            int health = characterData.roleData.health;
-            characterBlood.SetData(health);
-        };
+        character = MyUtility.GetComponent<Character>(transform);
+        indicatorController = MyUtility.GetComponentInChildren<UISkillIndicator>(transform);
+        HUD = MyUtility.GetComponentInChildren<HUD>(transform);
     }
 
     void Update()
     {
         RaycastHit hit;
         Ray ray = Camera.main.ScreenPointToRay(UnityEngine.Input.mousePosition);
-        var playerTrans = character.transform;
 
         if (Physics.Raycast(ray, out hit, Mathf.Infinity))
         {
@@ -55,21 +38,26 @@ public class PlayerController : MonoBehaviour
             }
 
             // 技能引导
-            indicatorController.ShowIndicator(hit, playerTrans);
+            indicatorController.Show(hit, character.transform);
 
-            // 释放技能
-            if (character.canFireSkill() && Input.GetMouseButton(0))
+            // 发动技能
+            if (indicatorController.IsEnable && Input.GetMouseButton(0))
             {
-                Vector3 dir = (hit.point - playerTrans.position).normalized;
-                character.TowardDir(dir);
-                character.FireSkill(hit);
+                Vector3 dir = (hit.point - character.transform.position).normalized;
+                if (character.CanIssueSkill()) {
+                    var skillData = indicatorController.GetCurrentSkillData();
+                    SkillProjectData skillProjectData = new SkillProjectData(character, skillData, dir);
+                    character.TowardDir(dir);
+                    character.IssueSkill(skillProjectData);
+                    indicatorController.CancleSkill();
+                }
             }
         }
 
         // 取消技能
         if (Input.GetKeyDown(KeyCode.Escape))
         {
-            character.CancleSelectSkill();
+            indicatorController.CancleSkill();
         }
     }
 }

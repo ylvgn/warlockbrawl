@@ -51,8 +51,7 @@
                 float2 offset = groundTex_ST.zw;
                 float4 c1 = tex2D(magmaTex, i.uv * tiling + offset);
                 fixed4 c2 = tex2D(groundTex, i.uv * tiling + offset);
-                float4 w = tex2D(maskTex, i.uv);
-                
+                float4 w = tex2D(maskTex, (i.uv - 0.5) * tiling * max(1 / tiling, testFloat) + 0.5);
                 float4 o = lerp(c1, c2, w);
                 return o;
             }
