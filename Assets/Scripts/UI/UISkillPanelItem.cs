@@ -42,7 +42,7 @@ public class UISkillPanelItem : MonoBehaviour
         if (!isEnable) return;
         if (PlayerController.Instance != null && PlayerController.Instance.character != null) {
             var character = PlayerController.Instance.character;
-            if (character.isSkillCoolDowning(skillId)) {
+            if (character.IsSkillCoolDowning(skillId)) {
                 if (!isAnim) {
                     isAnim = true;
                     m_fillImg.fillAmount = 0;

@@ -11,8 +11,14 @@ public class Character : MonoBehaviour
     [SerializeField] private CharacterData characterData = null;
     private Dictionary<int, float> coolingDownSkillStartTimeDict;
 
+#region buff
+    private List<BuffData> waitingAddBuffList;
+    private List<int> waitingRemoveBuffList;
+    public Dictionary<int, BuffData> buffIdToBuffDataDict {get; private set;}
+#endregion
+
     [Header("Configs")]
-    public Transform weaponIssuePoint;
+    public Transform weaponIssuePoint; // tmp
     
     [Header("Components")]
     [HideInInspector] public NavMeshAgent agent;
@@ -22,6 +28,11 @@ public class Character : MonoBehaviour
     void Awake()
     {
         coolingDownSkillStartTimeDict = new Dictionary<int, float>();
+#region buff
+        waitingAddBuffList = new List<BuffData>();
+        waitingRemoveBuffList = new List<int>();
+        buffIdToBuffDataDict = new Dictionary<int, BuffData>();
+#endregion
         agent = GetComponent<NavMeshAgent>();
         anim = GetComponent<Animator>();
         characterController = GetComponent<CharacterController>();
@@ -40,6 +51,7 @@ public class Character : MonoBehaviour
         TowardDir(endPos - transform.position);
         characterData.CharacterState = CharacterState.Moving;
     }
+
     public void TowardDir(Vector3 dir)
     {
         Quaternion rotation = Quaternion.LookRotation(dir);
@@ -81,7 +93,7 @@ public class Character : MonoBehaviour
             Debug.Log(string.Format("找不到对应的skillId={0}的数据", skillId));
             return;
         }
-        if (isSkillCoolDowning(skillId))
+        if (IsSkillCoolDowning(skillId))
         {
             Debug.Log(string.Format("当前skillId={0}未冷却完成", skillId));
             return;
@@ -103,7 +115,8 @@ public class Character : MonoBehaviour
 
     void Update()
     {
-        if (isDead()) return;
+        if (IsDead())
+            return;
         
         // 技能冷却中
         if (coolingDownSkillStartTimeDict.Count > 0)
@@ -131,6 +144,59 @@ public class Character : MonoBehaviour
         } else if (characterData.CharacterState == CharacterState.Moving) {
             characterData.CharacterState = CharacterState.Idle;
         }
+
+#region buff
+        // add buff
+        if (waitingAddBuffList.Count > 0)
+        {
+            foreach(var buff in waitingAddBuffList) {
+                int buffId = buff.id;
+                BuffData buffData = GetBuffData(buffId);
+                if (buffData == null) {
+                    buffIdToBuffDataDict.Add(buffId, buff);
+                } else {
+                    if (buffData.canOverlay)
+                        buffData.OverlayBuff(buffData);
+                }
+            }
+            waitingAddBuffList.Clear();
+        }
+
+        // remove buff
+        if (waitingRemoveBuffList.Count > 0) {
+            foreach(int buffId in waitingRemoveBuffList) {
+                if (GetBuffData(buffId) != null) {
+                    buffIdToBuffDataDict.Remove(buffId);
+                }
+            }
+            waitingRemoveBuffList.Clear();
+        }
+
+        // handle buff
+        if (buffIdToBuffDataDict.Count > 0) {
+            foreach(var item in buffIdToBuffDataDict) {
+                int buffId = item.Key;
+                var buffData = item.Value;
+                if (buffData.IsObsolete()) {
+                    TakeOffBuff(buffId);
+                    continue;
+                }
+                if (buffData.CanHandle())
+                {
+                    buffData.Handle();
+                }
+            }
+        }
+#endregion
+    }
+
+    public void JoyStick(Vector3 dir)
+    {   
+        if (CharacterData.CharacterState == CharacterState.Dead) return;
+        float speed = agent.speed;
+        TowardDir(dir);
+        transform.position += dir * speed * Time.deltaTime * characterData.moveSpeedDampTime;
+        anim.SetFloat("Speed", speed, characterData.moveSpeedDampTime, Time.deltaTime);
     }
 
     public bool CanIssueSkill()
@@ -138,7 +204,7 @@ public class Character : MonoBehaviour
         return characterData.CharacterState != CharacterState.Dead;
     }
 
-    public bool isDead() {
+    public bool IsDead() {
         return characterData.CharacterState == CharacterState.Dead;
     }
 
@@ -152,7 +218,7 @@ public class Character : MonoBehaviour
 
     public float GetCoolDownStartTimeStamp(int skillId)
     {
-        if (isSkillCoolDowning(skillId)) {
+        if (IsSkillCoolDowning(skillId)) {
             float res;
             if (coolingDownSkillStartTimeDict.TryGetValue(skillId, out res)){
                 return res;
@@ -162,7 +228,7 @@ public class Character : MonoBehaviour
         return Time.realtimeSinceStartup;
     }
 
-    public bool isSkillCoolDowning(int skillId)
+    public bool IsSkillCoolDowning(int skillId)
     {
         var skillData = characterData.GetSkillData(skillId);
         if (skillData.id == 0) {
@@ -178,10 +244,47 @@ public class Character : MonoBehaviour
         characterData.LearnSkill(skillData);
     }
 
-    public void TakeDamege(int damge) {
-        characterData.HP = Mathf.Min(0, characterData.HP - damge);
+    public void TakeDamege(int damge)
+    {
+        if (IsDead()) return;
+        Debug.Log("扣血TakeDamege: " + damge);
+        characterData.HP = Mathf.Max(0, characterData.HP - damge);
         if (GetHP() == 0) {
             characterData.CharacterState = CharacterState.Dead;
+            Debug.Log("<color=#00FF00> ========== dead ============= </color>");
         }
+    }
+
+    public void PutOnBuff(BuffData buffData)
+    {
+        if (buffData == null || IsDead()) return;
+        waitingAddBuffList.Add(buffData);
+        Debug.Log(string.Format("PutOnBuff: [{0}]", buffData.name));
+    }
+
+    public void TakeOffBuff(int buffId)
+    {
+        BuffData buffData = GetBuffData(buffId);
+        if (buffData != null) {
+            if (buffData.isEnable) {
+                waitingRemoveBuffList.Add(buffId);
+            }
+            buffData.KillSelf();
+        }
+    }
+
+    public void CleanBuff()
+    {
+        buffIdToBuffDataDict.Clear();
+        waitingAddBuffList.Clear();
+        waitingRemoveBuffList.Clear();
+    }
+
+    public BuffData GetBuffData(int buffId) {
+        BuffData buffData;
+        if (buffIdToBuffDataDict.TryGetValue(buffId, out buffData)) {
+            return buffData;
+        }
+        return null;
     }
 }

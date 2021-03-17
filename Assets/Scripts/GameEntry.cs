@@ -5,6 +5,7 @@ using UnityEngine;
 public class GameEntry : MonoBehaviour
 {
     public UISkillPanel UISkillPanel;
+    public FloorController FloorController;
     public GameObject UIIndicatorPrefab;
     public GameObject UIHUDPrefab;
 
@@ -28,6 +29,7 @@ public class GameEntry : MonoBehaviour
         BuildHUD(myCharacter);
         BuildSkillIndicator(myCharacter);
         myCharacter.gameObject.AddComponent<PlayerController>();
+        StatsManager.Instance.AddCharacter(myCharacter);
     }
 
     Character CreateCharacter(CharacterData characterData)

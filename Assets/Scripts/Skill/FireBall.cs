@@ -9,7 +9,7 @@ public class FireBall : SkillProject
     public override void Init(SkillProjectData data) {
         base.Init(data);
         var owner = getOwner();
-        if (owner == null || owner.isDead()) {
+        if (owner == null || owner.IsDead()) {
             return;
         }
 
@@ -39,7 +39,7 @@ public class FireBall : SkillProject
         if (!isEnable) return;
         Debug.Log("碰撞了！" + collision.gameObject.name);
         Character enemy = collision.gameObject.GetComponent<Character>();
-        if (enemy && !enemy.isDead()) {
+        if (enemy && !enemy.IsDead()) {
             var skillData = getSkillData();
             DamgeData damge = new DamgeData(OwnerData, skillData, enemy.CharacterData);
             enemy.TakeDamege(damge.CalcDamage());

@@ -11,7 +11,7 @@ public enum RangeType
 
 public class SkillData
 {
-    public int id;
+    public readonly int id;
     public string name;
     public float coolDownTime;
     public bool isCoolDowning;

@@ -2,15 +2,17 @@
 {
     Properties
     {
-        testFloat ("testFloat", range(0, 1)) = 1
+        //testFloat ("testFloat", range(0.1, 1)) = 1
         groundTex ("groundTex", 2D) = "white"
         magmaTex ("magmaTex", 2D) = "white"
+        flowMap ("flowMap", 2D) = "white"
         maskTex ("maskTex", 2D) = "white"
     }
     SubShader
     {
+        Name "my_floor"
         Tags { "RenderType"="Opaque" }
-        LOD 100
+        Cull Off
 
         Pass
         {
@@ -34,6 +36,7 @@
             sampler2D groundTex;
             sampler2D magmaTex;
             sampler2D maskTex;
+            sampler2D flowMap;
             float4 groundTex_ST;
             float testFloat;
 
@@ -48,10 +51,11 @@
             float4 ps_main (v2f i) : SV_Target
             {
                 float2 tiling = groundTex_ST.xy;
-                float2 offset = groundTex_ST.zw;
-                float4 c1 = tex2D(magmaTex, i.uv * tiling + offset);
-                fixed4 c2 = tex2D(groundTex, i.uv * tiling + offset);
                 float4 w = tex2D(maskTex, (i.uv - 0.5) * tiling * max(1 / tiling, testFloat) + 0.5);
+                float4 f = tex2D(flowMap, i.uv) * 2 - 1;
+                float2 offset = lerp(0, f, w.r) * _Time.y / 2;
+                fixed4 c1 = tex2D(groundTex, i.uv * tiling + offset);
+                float4 c2 = tex2D(magmaTex, i.uv * tiling + offset);
                 float4 o = lerp(c1, c2, w);
                 return o;
             }

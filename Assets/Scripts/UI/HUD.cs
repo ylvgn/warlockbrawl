@@ -19,6 +19,9 @@ public class HUD : MonoBehaviour
         character = MyUtility.GetComponentInParent<Character>(transform);
         healthImgRect = MyUtility.GetComponent<RectTransform>(transform, "bg/health");
         healthImg = MyUtility.GetComponent<Image>(transform, "bg/health");
+        animationCurve.AddKey(0, 0);
+        animationCurve.AddKey(1, 1);
+        animationCurve.preWrapMode = WrapMode.Default;
         maxWidth = healthImgRect.sizeDelta.x;
     }
 
@@ -46,22 +49,17 @@ public class HUD : MonoBehaviour
 
     public void SetData(int healthValue_)
     {
+        if (isAnim) return;
+        isAnim = true;
+
         if (healthValue_ <= 0) {
             healthValue_ = 0;
         }
 
-        if (isAnim)
-        {
-            StopAllCoroutines();
-            isAnim = false;
-        }
-
-        isAnim = true;
         StartCoroutine(UITween(healthValue_));
-        healthValue = healthValue_;
     }
 
-    IEnumerator UITween(float endValue)
+    IEnumerator UITween(int endValue)
     {
         float imgWidth = maxWidth * endValue / this.healthMax;
         Vector2 toSizeDelta = new Vector2(imgWidth, healthImgRect.sizeDelta.y);
@@ -74,5 +72,6 @@ public class HUD : MonoBehaviour
             yield return new WaitForSeconds(0.02f);
         }
         isAnim = false;
+        healthValue = endValue;
     }
 }

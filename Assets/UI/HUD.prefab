@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 7885255339635055596}
   - component: {fileID: 7204734409875516543}
   m_Layer: 0
-  m_Name: CharacterBlood
+  m_Name: HUD
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -112,6 +112,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2179f6b92acea0b46a9545a5767b98eb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  healthMax: 0
+  healthValue: 0
+  animationCurve:
+    serializedVersion: 2
+    m_Curve: []
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
 --- !u!1 &1596831938350805098
 GameObject:
   m_ObjectHideFlags: 0

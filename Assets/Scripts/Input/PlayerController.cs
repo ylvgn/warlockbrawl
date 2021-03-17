@@ -15,7 +15,7 @@ public class PlayerController : MonoBehaviour
     {
         if (_instance != null) {
             GameObject.Destroy(_instance); 
-            Debug.LogError("重复出现 PlayerController.instance");
+            Debug.LogError("重复实例化 PlayerController.instance");
         }
         _instance = this;
 
@@ -58,6 +58,13 @@ public class PlayerController : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Escape))
         {
             indicatorController.CancleSkill();
+        }
+
+        if (Application.isEditor && character != null)
+        {
+            Vector3 input = new Vector3(Input.GetAxisRaw("Horizontal"), 0, Input.GetAxisRaw("Vertical"));
+            if (input == Vector3.zero) return;
+            character.JoyStick(input);
         }
     }
 }
