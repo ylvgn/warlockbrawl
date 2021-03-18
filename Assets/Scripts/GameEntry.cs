@@ -5,9 +5,6 @@ using UnityEngine;
 public class GameEntry : MonoBehaviour
 {
     public UISkillPanel UISkillPanel;
-    public FloorController FloorController;
-    public GameObject UIIndicatorPrefab;
-    public GameObject UIHUDPrefab;
 
     void Start()
     {
@@ -20,41 +17,27 @@ public class GameEntry : MonoBehaviour
         };
         CharacterData characterData = new CharacterData("MyCharacter");
 
-        var myCharacter = CreateCharacter(characterData);
+        var myCharacter = ResManager.Instance.CreateCharacter(characterData, "Assets/Resources/Player/Animators/Mage.controller");
         foreach(var skillData in skillList) {
             myCharacter.LearnSkill(skillData);
             UISkillPanel.AddSkill(skillData);
         }
 
-        BuildHUD(myCharacter);
-        BuildSkillIndicator(myCharacter);
+        ResManager.Instance.BuildHUD<Character>(myCharacter, myCharacter.CharacterData.maxHP);
+        ResManager.Instance.BuildSkillIndicator(myCharacter);
         myCharacter.gameObject.AddComponent<PlayerController>();
+
+        // AI
+        CharacterData AICharacterData = new CharacterData("MyAICharacter");
+        var myAICharacter = ResManager.Instance.CreateCharacter(AICharacterData, "Assets/Resources/Player/Animators/AIMage.controller");
+        myAICharacter.SetData(AICharacterData);
+        myAICharacter.LearnSkill(new SkillData(1, "Fireball", "Effect/FireBall", 3, 10, RangeType.Point));
+        ResManager.Instance.BuildHUD<Character>(myAICharacter, myAICharacter.CharacterData.maxHP);
+        myAICharacter.gameObject.AddComponent<AIController>();
+
+        // stats
         StatsManager.Instance.AddCharacter(myCharacter);
+        StatsManager.Instance.AddCharacter(myAICharacter);
     }
 
-    Character CreateCharacter(CharacterData characterData)
-    {
-        var playerPrefabs = Resources.Load<GameObject>(("Player/Mage"));
-        GameObject playerObj = GameObject.Instantiate<GameObject>(playerPrefabs, Vector3.zero, Quaternion.identity);
-        var character = playerObj.GetComponent<Character>();
-        character.SetData(characterData);
-        return character;
-    }
-
-    HUD BuildHUD(Character character)
-    {
-        var playerHeight = character.characterController.height;
-        var obj = GameObject.Instantiate<GameObject>(UIHUDPrefab, character.transform);
-        var res = obj.GetComponent<HUD>();
-        var HUDRect = obj.GetComponent<RectTransform>();
-        HUDRect.localPosition = new Vector3(0, playerHeight, 0);
-        res.Init(character.CharacterData.maxHP);
-        return res;
-    }
-
-    UISkillIndicator BuildSkillIndicator(Character character)
-    {
-        var res = GameObject.Instantiate<GameObject>(UIIndicatorPrefab, character.transform).GetComponent<UISkillIndicator>();
-        return res;
-    }
 }

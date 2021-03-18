@@ -18,6 +18,7 @@ public class FloorController : MonoBehaviour
 
     public float intervalAddBuffTime = 4f;
     Dictionary<Character, float> characterAddBuffStartTimeDict;
+    private int DropHPBuffID = 1; // tmp
 
     void Awake()
     {
@@ -47,27 +48,22 @@ public class FloorController : MonoBehaviour
                         if (characterAddBuffStartTimeDict.TryGetValue(character, out startTime))
                         {
                             if (startTime + intervalAddBuffTime < Time.realtimeSinceStartup) {
-                                BuffData buff = CreateBuff(character);
+                                BuffData buff = ResManager.Instance.CreateBuff(DropHPBuffID, character);
                                 character.PutOnBuff(buff);
                                 characterAddBuffStartTimeDict[character] = Time.realtimeSinceStartup;
                             }
                         } else {
                             characterAddBuffStartTimeDict.Add(character, Time.realtimeSinceStartup);
-                            BuffData buff = CreateBuff(character);
+                            BuffData buff = ResManager.Instance.CreateBuff(DropHPBuffID, character);
                             character.PutOnBuff(buff);
                         }
-                    } else if (character.GetBuffData(1) != null) { // 回到地面
+                    } else if (character.GetBuffData(DropHPBuffID) != null) { // 回到地面
                         characterAddBuffStartTimeDict.Remove(character);
-                        character.TakeOffBuff(1);
+                        character.TakeOffBuff(DropHPBuffID);
                     }
                 }
             }
         }
-    }
-
-    // tmp
-    DropHPBuffData CreateBuff(Character character) {
-        return new DropHPBuffData(1, character, 100, 3, 5);
     }
 
     public void ReStart()
@@ -82,11 +78,16 @@ public class FloorController : MonoBehaviour
             testFloat += 0.1f;
             level ++;
             Shader.SetGlobalFloat("testFloat", testFloat);
-            Debug.Log(string.Format("开始缩圈: testFloat={0}, timerId={1}, curRadius={2}", testFloat, timerId, curRadius));
+            Debug.Log(string.Format("缩圈: testFloat={0}, timerId={1}, curRadius={2}", testFloat, timerId, curRadius));
             if (testFloat >= 1) {
                 curRadius = maxRadius / 9;
                 TimerManager.Instance.RemoveTimer(timerId);
             }
         });
+    }
+
+    void OnDestroy()
+    {
+        Shader.SetGlobalFloat("testFloat", 0.1f);
     }
 }

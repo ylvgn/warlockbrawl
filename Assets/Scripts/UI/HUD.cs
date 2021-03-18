@@ -9,7 +9,6 @@ public class HUD : MonoBehaviour
     [SerializeField] private int healthValue;
     private bool isAnim;
     private float maxWidth;
-
     private Image healthImg;
     private RectTransform healthImgRect;
     public AnimationCurve animationCurve;
@@ -33,7 +32,7 @@ public class HUD : MonoBehaviour
 
     void Update()
     {
-        if (character != null)
+        if (character != null && healthMax > 0)
         {
             if (character.GetHP() != healthValue)
             {
@@ -49,6 +48,11 @@ public class HUD : MonoBehaviour
 
     public void SetData(int healthValue_)
     {
+        if (healthMax == 0) {
+            Debug.LogError("healthMax 未赋值");
+            return;
+        }
+
         if (isAnim) return;
         isAnim = true;
 
@@ -61,7 +65,7 @@ public class HUD : MonoBehaviour
 
     IEnumerator UITween(int endValue)
     {
-        float imgWidth = maxWidth * endValue / this.healthMax;
+        float imgWidth = maxWidth * endValue / healthMax;
         Vector2 toSizeDelta = new Vector2(imgWidth, healthImgRect.sizeDelta.y);
         float startTime = Time.realtimeSinceStartup;
         float endTime = Time.realtimeSinceStartup + 1;

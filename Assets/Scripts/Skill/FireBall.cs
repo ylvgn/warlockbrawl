@@ -37,7 +37,7 @@ public class FireBall : SkillProject
     
     public override void OnCollisionEnter(Collision collision) {
         if (!isEnable) return;
-        Debug.Log("碰撞了！" + collision.gameObject.name);
+        Debug.Log("<color=#00FF00>碰撞了！</color>" + collision.gameObject.name);
         Character enemy = collision.gameObject.GetComponent<Character>();
         if (enemy && !enemy.IsDead()) {
             var skillData = getSkillData();
