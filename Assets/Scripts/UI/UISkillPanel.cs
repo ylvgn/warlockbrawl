@@ -47,13 +47,15 @@ public class UISkillPanel : MonoBehaviour
         if (PlayerController.Instance == null || PlayerController.Instance.character == null) {
             return;
         }
-        var skillData = PlayerController.Instance.character.CharacterData.GetSkillData(skillId);
+        var character = PlayerController.Instance.character;
+        if (character.IsDead()) return;
+        var skillData = character.CharacterData.GetSkillData(skillId);
         if (skillData.id == 0) {
             return;
         }
 
         if (skillData.RangeType == RangeType.None) {
-            PlayerController.Instance.character.IssueSkill(skillData.id);
+            character.IssueSkill(skillData.id);
             Debug.Log("直接触发skillId= " + skillId);
             return;
         }

@@ -10,20 +10,22 @@ public class Character : MonoBehaviour
     [Header("Datas")]
     [SerializeField] private CharacterData characterData = null;
     private Dictionary<int, float> coolingDownSkillStartTimeDict;
-
 #region buff
     private List<BuffData> waitingAddBuffList;
     private List<int> waitingRemoveBuffList;
     public Dictionary<int, BuffData> buffIdToBuffDataDict {get; private set;}
 #endregion
-
-    [Header("Configs")]
-    public Transform weaponIssuePoint; // tmp
     
     [Header("Components")]
     [HideInInspector] public NavMeshAgent agent;
     [HideInInspector] public Animator anim;
     [HideInInspector] public CharacterController characterController;
+
+    [Header("Configs")]
+    public Transform weaponIssuePoint; // tmp
+
+    [Header("Events")]
+    Action onAttackEvent;
 
     void Awake()
     {
@@ -36,7 +38,6 @@ public class Character : MonoBehaviour
         agent = GetComponent<NavMeshAgent>();
         anim = GetComponent<Animator>();
         characterController = GetComponent<CharacterController>();
-        agent.stoppingDistance = 1;
     }
 
     public void SetData(CharacterData data)
@@ -47,13 +48,25 @@ public class Character : MonoBehaviour
 
     public void Move(Vector3 endPos)
     {
+        if (IsDead()) return;
+        if (characterData.CharacterState == CharacterState.OnAttack) return; // tmp
+        characterData.CharacterState = CharacterState.Moving;
+        agent.isStopped = false;
         agent.SetDestination(endPos);
         TowardDir(endPos - transform.position);
-        characterData.CharacterState = CharacterState.Moving;
+    }
+
+    public void StopMove()
+    {
+        agent.isStopped = true;
+        anim.SetFloat("Speed", 0);
+        if (!IsDead())
+            characterData.CharacterState = CharacterState.Idle;
     }
 
     public void TowardDir(Vector3 dir)
     {
+        if (IsDead()) return;
         Quaternion rotation = Quaternion.LookRotation(dir);
         float rotationY = Mathf.SmoothDampAngle(
             transform.eulerAngles.y,
@@ -66,6 +79,7 @@ public class Character : MonoBehaviour
 
     public void IssueSkill(int skillId)
     {
+        if (IsDead()) return;
         if (skillId == 0)
         {
             Debug.Log("传入参数不合法 skillId == 0");
@@ -77,6 +91,7 @@ public class Character : MonoBehaviour
 
     public void IssueSkill(SkillProjectData skillProjectData)
     {
+        if (IsDead()) return;
         var skillData = skillProjectData.skillData;
         if (skillData == null)
         {
@@ -105,12 +120,35 @@ public class Character : MonoBehaviour
                 Debug.LogError("找不到Resources资源 path= " + skillData.resPath);
                 return;
             }
-            var skillProject = GameObject.Instantiate<GameObject>(prefab, Vector3.zero, Quaternion.identity).GetComponent<SkillProject>();
-            skillProject.Init(skillProjectData);
+            onAttackEvent += () =>
+            {
+                var skillProject = GameObject.Instantiate<GameObject>(prefab, Vector3.zero, Quaternion.identity).GetComponent<SkillProject>();
+                skillProject.Init(skillProjectData);
+            };
         }
+
+        StopMove(); // tmp
+        TowardDir(skillProjectData.dir);
+        characterData.CharacterState = CharacterState.OnAttack;
+        anim.SetTrigger("Attack");
         skillData.isCoolDowning = true;
         coolingDownSkillStartTimeDict.Add(skillId, Time.realtimeSinceStartup);
         return;
+    }
+
+    // 在animator内调用
+    void OnAttack()
+    {
+        if (onAttackEvent != null)
+            onAttackEvent();
+        onAttackEvent = null;
+    }
+
+    // 在animator内调用
+    void EndAttack()
+    {
+        if (!IsDead())
+            characterData.CharacterState = CharacterState.Idle;
     }
 
     void Update()
@@ -139,10 +177,13 @@ public class Character : MonoBehaviour
 
         // 角色移动
         if(!agent.isStopped) {
-            float speed = agent.velocity.magnitude / agent.speed;
-            anim.SetFloat("Speed", speed, characterData.moveSpeedDampTime, Time.deltaTime);
-        } else if (characterData.CharacterState == CharacterState.Moving) {
-            characterData.CharacterState = CharacterState.Idle;
+            float distance = Vector3.Distance(agent.destination, transform.position);
+            if (Mathf.Approximately(distance, 0f)) {
+                StopMove();
+            } else {
+                float speed = agent.velocity.magnitude / agent.speed;
+                anim.SetFloat("Speed", speed, characterData.moveSpeedDampTime, Time.deltaTime);
+            }
         }
 
 #region buff
@@ -192,7 +233,7 @@ public class Character : MonoBehaviour
 
     public void JoyStick(Vector3 dir)
     {   
-        if (CharacterData.CharacterState == CharacterState.Dead) return;
+        if (IsDead() || characterData.CharacterState == CharacterState.OnAttack) return;
         float speed = agent.speed;
         TowardDir(dir);
         transform.position += dir * speed * Time.deltaTime * characterData.moveSpeedDampTime;
@@ -238,19 +279,16 @@ public class Character : MonoBehaviour
         return skillData.isCoolDowning;
     }
 
-    // temp
-    public void LearnSkill(SkillData skillData)
-    {
-        characterData.LearnSkill(skillData);
-    }
-
     public void TakeDamege(int damge)
     {
         if (IsDead()) return;
-        Debug.Log("扣血TakeDamege: " + damge);
+        Debug.Log(characterData.name + "<color=#00FF00>扣血 </color> TakeDamege: " + damge);
         characterData.HP = Mathf.Max(0, characterData.HP - damge);
-        if (GetHP() == 0) {
+        if (GetHP() == 0)
+        {
             characterData.CharacterState = CharacterState.Dead;
+            StopMove();
+            // CleanBuff(); 写这个之后 update的foreach会出问题
             Debug.Log("<color=#00FF00> ========== dead ============= </color>");
         }
     }
@@ -273,18 +311,25 @@ public class Character : MonoBehaviour
         }
     }
 
-    public void CleanBuff()
-    {
-        buffIdToBuffDataDict.Clear();
-        waitingAddBuffList.Clear();
-        waitingRemoveBuffList.Clear();
-    }
-
     public BuffData GetBuffData(int buffId) {
         BuffData buffData;
         if (buffIdToBuffDataDict.TryGetValue(buffId, out buffData)) {
             return buffData;
         }
         return null;
+    }
+
+    // temp
+    public void LearnSkill(SkillData skillData)
+    {
+        characterData.LearnSkill(skillData);
+    }
+
+    // tmp
+    public void CleanBuff()
+    {
+        buffIdToBuffDataDict.Clear();
+        waitingAddBuffList.Clear();
+        waitingRemoveBuffList.Clear();
     }
 }

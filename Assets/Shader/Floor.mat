@@ -72,7 +72,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - matcapTex:
-        m_Texture: {fileID: 2800000, guid: 6f5c0e53381cff244aa3333c38ae7582, type: 3}
+        m_Texture: {fileID: 2800000, guid: 103ff8937a23aad4d860d3ec65c4b3e8, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Floats:

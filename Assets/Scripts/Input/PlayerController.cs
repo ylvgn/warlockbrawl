@@ -8,8 +8,11 @@ public class PlayerController : MonoBehaviour
     public Character character;
     public UISkillIndicator indicatorController;
     private HUD HUD;
+
     public static PlayerController Instance => _instance;
     static PlayerController _instance = null;
+
+    public bool canClickMouse; // 处理UI无法阻挡Raycast问题
 
     void Start()
     {
@@ -22,19 +25,24 @@ public class PlayerController : MonoBehaviour
         character = MyUtility.GetComponent<Character>(transform);
         indicatorController = MyUtility.GetComponentInChildren<UISkillIndicator>(transform);
         HUD = MyUtility.GetComponentInChildren<HUD>(transform);
+        canClickMouse = false;
     }
 
     void Update()
     {
         RaycastHit hit;
-        Ray ray = Camera.main.ScreenPointToRay(UnityEngine.Input.mousePosition);
+        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
 
         if (Physics.Raycast(ray, out hit, Mathf.Infinity))
         {
             // 角色移动
-            if (UnityEngine.Input.GetMouseButton(1))
+            if (Input.GetMouseButton(1))
             {
-                character.Move(hit.point);
+                if (canClickMouse) {
+                    character.Move(hit.point);
+                } else {
+                    character.StopMove();
+                }
             }
 
             // 技能引导
@@ -47,7 +55,6 @@ public class PlayerController : MonoBehaviour
                 if (character.CanIssueSkill()) {
                     var skillData = indicatorController.GetCurrentSkillData();
                     SkillProjectData skillProjectData = new SkillProjectData(character, skillData, dir);
-                    character.TowardDir(dir);
                     character.IssueSkill(skillProjectData);
                     indicatorController.CancleSkill();
                 }

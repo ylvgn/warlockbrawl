@@ -15,7 +15,7 @@ public enum CharacterState
 {
     Idle,
     Moving,
-    Spelling,
+    OnAttack,
     Dead,
 }
 
