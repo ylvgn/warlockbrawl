@@ -38,7 +38,8 @@ public class FloorController : MonoBehaviour
         if (StatsManager.Instance.characterList != null)
         {
             var characterList = StatsManager.Instance.characterList;
-            if (characterList.Count > 0) {
+            if (characterList.Count > 0)
+            {
                 foreach(var character in characterList) {
                     float dist = Vector3.Distance(Vector3.zero, character.transform.position);
                     Debug.DrawLine(Vector3.zero, character.transform.position, Color.green);
@@ -78,7 +79,7 @@ public class FloorController : MonoBehaviour
             testFloat += 0.1f;
             level ++;
             Shader.SetGlobalFloat("testFloat", testFloat);
-            Debug.Log(string.Format("缩圈: testFloat={0}, timerId={1}, curRadius={2}", testFloat, timerId, curRadius));
+            //Debug.Log(string.Format("缩圈: testFloat={0}, timerId={1}, curRadius={2}", testFloat, timerId, curRadius));
             if (testFloat >= 1) {
                 curRadius = maxRadius / 9;
                 TimerManager.Instance.RemoveTimer(timerId);

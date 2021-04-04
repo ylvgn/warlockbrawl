@@ -38,6 +38,7 @@ public struct DamgeData
         float basicPhysicalDamage = skillData.basicDamage;
         physicalDamage = (int)(basicMagicDamage * (1 + (ownerData.magic - enemyData.magicResistance - defense * 0.1) / 100));
         magicalDamage = (int)(basicPhysicalDamage * (1 + (ownerData.strength - enemyData.physicalResistance - defense * 0.1) / 100));
+        MyUtility.MyDebug("<color=#FFFF00>[{0}]</color> 使用{1} 打中 <color=#FFFF00>[{2}]</color>", ownerData.name, skillData.name, enemyData.name);
     }
 
     public int CalcDamage() {

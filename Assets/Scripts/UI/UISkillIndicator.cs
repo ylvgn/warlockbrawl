@@ -8,16 +8,18 @@ public class UISkillIndicator : MonoBehaviour
 {
     Dictionary<int, Sprite> spriteAssetsDict;
     Image indicatorImg;
+    Image indicatorRangeImg;
+
     public bool IsEnable => isEnable;
     bool isEnable;
     public SkillData curSkillData;
 
     void Awake()
     {
-        isEnable = false;
         spriteAssetsDict = new Dictionary<int, Sprite>();
         indicatorImg = MyUtility.GetComponent<Image>(transform, "indicator");
-        indicatorImg.gameObject.SetActive(false);
+        indicatorRangeImg = MyUtility.GetComponent<Image>(transform, "indicatorRange");
+        CancleSkill();
     }
 
     public void SetData(SkillData skillData)
@@ -39,17 +41,23 @@ public class UISkillIndicator : MonoBehaviour
 
         indicatorImg.sprite = sprite;
         indicatorImg.gameObject.SetActive(true);
-    
+
+        float range = skillData.maxRange;
+        float radius = skillData.maxRadius;
+
         switch (RangeType)
         {
             case RangeType.None:
                 break;
             case RangeType.Point:
-                indicatorImg.transform.localScale = new Vector3(5, 5, 1);
+                indicatorImg.transform.localScale = new Vector3(radius, radius, 1);
                 break;
             case RangeType.ArcShaped:
                 break;
             case RangeType.Circle:
+                indicatorImg.transform.localScale = new Vector3(radius, radius, 1);
+                indicatorRangeImg.transform.localScale = new Vector3(range, range, 1);
+                indicatorRangeImg.gameObject.SetActive(true);
                 break;
             case RangeType.DirectLine:
                 indicatorImg.transform.localScale = new Vector3(5, 5, 1);
@@ -61,12 +69,12 @@ public class UISkillIndicator : MonoBehaviour
         isEnable = true;
     }
 
-    // 开始技能引导
+
     public void Show(RaycastHit hit, Transform player)
     {
         if (!isEnable) return;
-
-        switch(curSkillData.RangeType)
+        float skillRange = curSkillData.maxRange;
+        switch (curSkillData.RangeType)
         {
             case RangeType.None:
                 break;
@@ -77,6 +85,11 @@ public class UISkillIndicator : MonoBehaviour
             case RangeType.ArcShaped:
                 break;
             case RangeType.Circle:
+                float distance = Vector3.Distance(player.position, hit.point);
+                var dir = hit.point - player.position;
+                if (distance >= skillRange / 2.0f) distance = skillRange / 2.0f;
+                Debug.DrawLine(player.position, player.position + dir.normalized * distance, Color.blue);
+                indicatorImg.transform.position = player.position + dir.normalized * distance;
                 break;
             case RangeType.DirectLine:
                 indicatorImg.transform.position = hit.point;
@@ -92,6 +105,7 @@ public class UISkillIndicator : MonoBehaviour
     {
         isEnable = false;
         indicatorImg.gameObject.SetActive(false);
+        indicatorRangeImg.gameObject.SetActive(false);
     }
 
     public SkillData GetCurrentSkillData() {

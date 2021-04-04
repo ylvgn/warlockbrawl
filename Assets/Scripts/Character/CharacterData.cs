@@ -16,6 +16,8 @@ public enum CharacterState
     Idle,
     Moving,
     OnAttack,
+    OnAttackNoMove,
+    Spelling,
     Dead,
 }
 
@@ -37,7 +39,7 @@ public class CharacterData
     public WuXing WuXing = WuXing.Earth;
     public CharacterState CharacterState;
 
-#region Character Attitude
+#region Character Attribute
     public int strength;           // 力量
     public int magic;              // 魔法
     public int endurance;          // 耐力

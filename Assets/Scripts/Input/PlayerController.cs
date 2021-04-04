@@ -32,6 +32,7 @@ public class PlayerController : MonoBehaviour
     {
         RaycastHit hit;
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        if (character.IsDead()) return;
 
         if (Physics.Raycast(ray, out hit, Mathf.Infinity))
         {
@@ -51,10 +52,9 @@ public class PlayerController : MonoBehaviour
             // 发动技能
             if (indicatorController.IsEnable && Input.GetMouseButton(0))
             {
-                Vector3 dir = (hit.point - character.transform.position).normalized;
                 if (character.CanIssueSkill()) {
                     var skillData = indicatorController.GetCurrentSkillData();
-                    SkillProjectData skillProjectData = new SkillProjectData(character, skillData, dir);
+                    SkillProjectData skillProjectData = new SkillProjectData(character, skillData, hit.point);
                     character.IssueSkill(skillProjectData);
                     indicatorController.CancleSkill();
                 }
@@ -72,6 +72,6 @@ public class PlayerController : MonoBehaviour
             Vector3 input = new Vector3(Input.GetAxisRaw("Horizontal"), 0, Input.GetAxisRaw("Vertical"));
             if (input == Vector3.zero) return;
             character.JoyStick(input);
-        }
+        }        
     }
 }

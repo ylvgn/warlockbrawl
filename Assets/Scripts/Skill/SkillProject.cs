@@ -4,27 +4,30 @@ using UnityEngine;
 
 public abstract class SkillProject : MonoBehaviour
 {
-    private SkillProjectData skillProjectData;
-    protected CharacterData OwnerData { get; private set; }
+    public SkillProjectData SkillProjectData { get; protected set; }
     protected Vector3 StartPos { get; set; }
 
     public virtual void Init(SkillProjectData skillProjectData_)
     {
-        skillProjectData = skillProjectData_;
-        OwnerData = skillProjectData.owner.CharacterData;
+        SkillProjectData = skillProjectData_;
         StartPos = getOwner().transform.position;
     }
 
     public Character getOwner() {
-        return skillProjectData.owner;
+        return SkillProjectData.owner;
     }
 
     public SkillData getSkillData() {
-        return skillProjectData.skillData;
+        return SkillProjectData.skillData;
     }
 
     public Vector3 getDir() {
-        return skillProjectData.dir;
+        return SkillProjectData.GetDir();
+    }
+
+    public Vector3 getEndPos()
+    {
+        return SkillProjectData.endPos;
     }
 
     public abstract void OnCollisionEnter(Collision collision);

@@ -27,24 +27,22 @@ public class FireBall : SkillProject
         if (!isEnable) return;
         var skillData = getSkillData();
         transform.Translate(Vector3.forward * skillData.flySpeed * Time.deltaTime);
-
-        if (Vector3.Distance(transform.position, StartPos) > 100) {
+        if (Vector3.Distance(transform.position, StartPos) > skillData.maxRange) {
             isEnable = false;
             GameObject.Destroy(gameObject);
-            Debug.Log("超出范围啦");
         }
     }
     
     public override void OnCollisionEnter(Collision collision) {
         if (!isEnable) return;
-        Debug.Log("<color=#00FF00>碰撞了！</color>" + collision.gameObject.name);
         Character enemy = collision.gameObject.GetComponent<Character>();
+        var owner = getOwner();
+        if (enemy == owner) return;
         if (enemy && !enemy.IsDead()) {
             var skillData = getSkillData();
-            DamgeData damge = new DamgeData(OwnerData, skillData, enemy.CharacterData);
+            DamgeData damge = new DamgeData(owner.CharacterData, skillData, enemy.CharacterData);
             enemy.TakeDamege(damge.CalcDamage());
         }
-
         GameObject.Destroy(gameObject);
     }
 }

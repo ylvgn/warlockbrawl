@@ -9,26 +9,28 @@ public class TimerManager : MonoBehaviour
     private Dictionary<int, TimerData> timerIdToHandlerDict;
     private List<int> waitingRemoveList;
     private List<TimerData> waitingAddList;
+    
     public static TimerManager Instance => _instance;
     static TimerManager _instance = null;
+
     public sealed class TimerData
     {
         public readonly int timerId;
         public readonly bool isLoop;
-        private Action func;
+        private Action invokeFunc;
         private float delayTime;
         private float intervalCallBackTime; // LoopTimer的间隔执行时间
         private float startTime;
         private bool hasResetLoopData;
-        public TimerData(int timerId_, float delayTime_, Action func_, float intervalCallBackTime_ = 0)
+        public TimerData(int timerId_, float delayTime_, Action invokeFunc_, float intervalCallBackTime_ = 0)
         {
-            if (func_ == null) {
+            if (invokeFunc_ == null) {
                 Debug.LogError("TimerData传入function为空");
             }
 
             timerId = timerId_;
             delayTime = delayTime_;
-            func = func_;
+            invokeFunc = invokeFunc_;
             intervalCallBackTime = intervalCallBackTime_;
             startTime = Time.realtimeSinceStartup;
 
@@ -62,15 +64,15 @@ public class TimerManager : MonoBehaviour
                 return;
             }
             startTime = Time.realtimeSinceStartup;
-            func();
+            invokeFunc();
         }
 
         public void Stop() {
-            func = null;
+            invokeFunc = null;
         }
 
         public bool IsStop() {
-            return func == null;
+            return invokeFunc == null;
         }
     }
 

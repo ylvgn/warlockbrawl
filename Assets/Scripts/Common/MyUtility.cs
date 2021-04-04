@@ -39,4 +39,8 @@ public static class MyUtility
         return res;
     }
     
+    public static void MyDebug(string format, params object[] args)
+    {
+        Debug.Log("<color=#00FF00> MyDebug: </color>" + string.Format(format, args));
+    }
 }

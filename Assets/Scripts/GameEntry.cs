@@ -6,14 +6,20 @@ public class GameEntry : MonoBehaviour
 {
     public UISkillPanel UISkillPanel;
 
+    // Config
+    public static Dictionary<string, SkillData> MySkillConfig = new Dictionary<string, SkillData>()
+    {
+        { "FireBall", new SkillData(1, "Fireball", "Effect/FireBall", 3, 100, 3, RangeType.Point) },
+        { "SnowStorm", new SkillData(2, "Fireball", "Effect/SnowStorm", 5, 15, 3, RangeType.Circle, 10, 2) },
+    };
+
     void Start()
     {
         // Test Data
         List<SkillData> skillList = new List<SkillData>()
         {
-            new SkillData(1, "Fireball", "Effect/FireBall", 3, 10, RangeType.Point),
-            new SkillData(2, "RecoverHP", "Effect/FireBall", 4),
-            new SkillData(3, "SnowStorm", "Effect/FireBall", 5, 10, RangeType.Circle),
+            MySkillConfig["FireBall"],
+            MySkillConfig["SnowStorm"],
         };
         CharacterData characterData = new CharacterData("MyCharacter");
 
@@ -31,7 +37,7 @@ public class GameEntry : MonoBehaviour
         CharacterData AICharacterData = new CharacterData("MyAICharacter");
         var myAICharacter = ResManager.Instance.CreateCharacter(AICharacterData, "Assets/Resources/Player/Animators/AIMage.controller");
         myAICharacter.SetData(AICharacterData);
-        myAICharacter.LearnSkill(new SkillData(1, "Fireball", "Effect/FireBall", 3, 10, RangeType.Point));
+        myAICharacter.LearnSkill(new SkillData(1, "Fireball", "Effect/FireBall", 3, 100, 5, RangeType.Point));
         ResManager.Instance.BuildHUD<Character>(myAICharacter, myAICharacter.CharacterData.maxHP);
         myAICharacter.gameObject.AddComponent<AIController>();
 
@@ -39,5 +45,4 @@ public class GameEntry : MonoBehaviour
         StatsManager.Instance.AddCharacter(myCharacter);
         StatsManager.Instance.AddCharacter(myAICharacter);
     }
-
 }

@@ -52,18 +52,20 @@
                 v2f o;
                 o.pos = UnityObjectToClipPos(v.pos);
                 o.uv = v.uv;
-                o.vnormal = mul((float3x3)UNITY_MATRIX_MV, v.normal);
+                o.vnormal = mul(v.normal, transpose(UNITY_MATRIX_MV)); // mul(MV_IT, v) -> mul(v, MV_I) -> mul(v, transpose(MV))
                 o.vpos = UnityObjectToViewPos(v.pos);
                 return o;
             }
 
-            float4 flow_map(sampler2D base, float2 uv, float2 tiling, float t) {
+            float4 flow_map(sampler2D base, float2 uv, float2 tiling, float t)
+            {
                 float4 f = tex2D(flowMap, uv) * 2 - 1;
                 float4 o = tex2D(base, uv * tiling + f.xy * t);
                 return o;
             }
 
-            float4 matcap(float3 vpos, float3 vnormal) {
+            float4 matcap(float3 vpos, float3 vnormal)
+            {
                 float3 N = normalize(vnormal);
                 float3 V = normalize(vpos);
                 N -= V * dot(N, V);
