@@ -8,14 +8,13 @@ public class FireBall : SkillProject
 
     public override void Init(SkillProjectData data) {
         base.Init(data);
-        var owner = getOwner();
-        if (owner == null || owner.IsDead()) {
+        if (Owner.IsDead()) {
             return;
         }
 
         Vector3 dir = getDir();
-        float offsetY = owner.characterController.height;
-        var startPos = owner.transform.position + new Vector3(0, offsetY / 2, 0) + dir;
+        float offsetY = Owner.characterController.height;
+        var startPos = Owner.transform.position + new Vector3(0, offsetY / 2, 0) + dir;
         transform.position = startPos;
         transform.rotation = Quaternion.LookRotation(dir);
         GameObject.Destroy(gameObject, 5);
@@ -36,13 +35,18 @@ public class FireBall : SkillProject
     public override void OnCollisionEnter(Collision collision) {
         if (!isEnable) return;
         Character enemy = collision.gameObject.GetComponent<Character>();
-        var owner = getOwner();
-        if (enemy == owner) return;
+        if (enemy == Owner) return;
         if (enemy && !enemy.IsDead()) {
-            var skillData = getSkillData();
-            DamgeData damge = new DamgeData(owner.CharacterData, skillData, enemy.CharacterData);
-            enemy.TakeDamege(damge.CalcDamage());
+            var damge = GetDamage(enemy);
+            enemy.TakeDamage(damge.CalcDamage());
         }
         GameObject.Destroy(gameObject);
+    }
+
+    public override DamgeData GetDamage(IAttackable other)
+    {
+        var skillData = getSkillData();
+        var enemy = other as Character;
+        return new DamgeData(Owner.CharacterData, skillData, enemy.CharacterData);
     }
 }

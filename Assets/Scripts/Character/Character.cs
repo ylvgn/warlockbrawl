@@ -4,19 +4,17 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 
-public class Character : MonoBehaviour
+public class Character : MonoBehaviour, IAttackable
 {
     public CharacterData CharacterData => characterData;
     [Header("Datas")]
     [SerializeField] private CharacterData characterData = null;
     private Dictionary<int, float> coolingDownSkillStartTimeDict;
     private float spellingstartTime;
-    private SkillProjectData currentSkill;
+    private SkillBehaviourData currentSkill; // emmmmmm
 
 #region buff
     private List<BuffData> waitingAddBuffList;
-    private List<int> waitingRemoveBuffList;
-    public Dictionary<int, BuffData> buffIdToBuffDataDict {get; private set;}
 #endregion
     
     [Header("Components")]
@@ -33,11 +31,9 @@ public class Character : MonoBehaviour
     void Awake()
     {
         coolingDownSkillStartTimeDict = new Dictionary<int, float>();
-#region buff
+        #region buff
         waitingAddBuffList = new List<BuffData>();
-        waitingRemoveBuffList = new List<int>();
-        buffIdToBuffDataDict = new Dictionary<int, BuffData>();
-#endregion
+        #endregion
         agent = GetComponent<NavMeshAgent>();
         anim = GetComponent<Animator>();
         characterController = GetComponent<CharacterController>();
@@ -83,26 +79,26 @@ public class Character : MonoBehaviour
 
     public void IssueSkill(int skillId)
     {
-        SkillProjectData skillProjectData = new SkillProjectData(this, characterData.GetSkillData(skillId));
-        IssueSkill(skillProjectData);
+        var skillBehaviourData = SkillData.MakeBehaviourData(this, characterData.GetSkillData(skillId));
+        IssueSkill(skillBehaviourData);
     }
 
-    public void IssueSkill(SkillProjectData skillProjectData)
+    public void IssueSkill(SkillBehaviourData skillBehaviourData)
     {
         if (IsDead()) return;
         if (IsSpelling()) return;
 
-        var skillData = skillProjectData.skillData;
+        var skillData = skillBehaviourData.skillData;
         if (skillData == null)
         {
             Debug.Log("传入参数 skillData == null");
             return;
         }
-        int skillId = skillData.id;
         if (!CanIssueSkill()) {
             Debug.Log("当前状态不能发动技能");
             return;
         }
+        int skillId = skillData.id;
         if (characterData.GetSkillData(skillId) != skillData)
         {
             Debug.Log(string.Format("找不到对应的skillId={0}的数据", skillId));
@@ -114,6 +110,17 @@ public class Character : MonoBehaviour
             return;
         }
 
+        IssueProjectSkill(skillBehaviourData as SkillProjectData); // tmp, SkillMountBuff未写完
+
+        skillData.isCoolDowning = true;
+        coolingDownSkillStartTimeDict.Add(skillId, Time.realtimeSinceStartup);
+        return;
+    }
+
+    
+    void IssueProjectSkill(SkillProjectData skillProjectData)
+    {
+        var skillData = skillProjectData.skillData;
         currentSkill = skillProjectData;
         GameObject prefab = Resources.Load<GameObject>(skillData.resPath);
         if (prefab == null)
@@ -121,10 +128,8 @@ public class Character : MonoBehaviour
             Debug.LogError("找不到Resources资源 path= " + skillData.resPath);
             return;
         }
-
         StopMove();
-        if (skillData.IsBallistic())
-        {
+        if (skillData.IsBallistic()) {
             characterData.CharacterState = CharacterState.OnAttack;
         } else if (skillData.IsSpelling()) {
             characterData.CharacterState = CharacterState.Spelling;
@@ -135,12 +140,9 @@ public class Character : MonoBehaviour
         onAttackEvent += () =>
         {
             var skillProject = GameObject.Instantiate<GameObject>(prefab, Vector3.zero, Quaternion.identity).GetComponent<SkillProject>();
-            skillProject.Init(skillProjectData);
+            skillProject.Init(skillProjectData as SkillProjectData);
         };
         TowardDir(skillProjectData.GetDir());
-        skillData.isCoolDowning = true;
-        coolingDownSkillStartTimeDict.Add(skillId, Time.realtimeSinceStartup);
-        return;
     }
 
     void Update()
@@ -163,7 +165,7 @@ public class Character : MonoBehaviour
 
             for (int i = 0; i < removeList.Count; i ++) {
                 coolingDownSkillStartTimeDict.Remove(removeList[i]);
-                Debug.Log("技能冷却完毕skillId:" + removeList[i]);
+                //Debug.Log("技能冷却完毕skillId:" + removeList[i]);
             }
         }
 
@@ -191,55 +193,12 @@ public class Character : MonoBehaviour
         // add buff
         if (waitingAddBuffList.Count > 0)
         {
-            for (int i = 0; i < waitingAddBuffList.Count; i ++)
-            {
-                var buff = waitingAddBuffList[i];
-                int buffId = buff.id;
-                BuffData buffData = GetBuffData(buffId);
-                if (buffData == null)
-                {
-                    buffIdToBuffDataDict.Add(buffId, buff);
-                }
-                else
-                {
-                    if (buffData.canOverlay)
-                        buffData.OverlayBuff(buffData);
-                }
-            }
+            characterData.AddBuffs(waitingAddBuffList);
             waitingAddBuffList.Clear();
         }
 
-        // remove buff
-        if (waitingRemoveBuffList.Count > 0) 
-        {
-            for (int i = 0; i < waitingRemoveBuffList.Count; i ++)
-            {
-                var buffId = waitingRemoveBuffList[i];
-                if (GetBuffData(buffId) != null)
-                {
-                    buffIdToBuffDataDict.Remove(buffId);
-                }
-            }
-            waitingRemoveBuffList.Clear();
-        }
-
         // handle buff
-        if (buffIdToBuffDataDict.Count > 0) 
-        {
-            foreach(var item in buffIdToBuffDataDict) 
-            {
-                int buffId = item.Key;
-                var buffData = item.Value;
-                if (buffData.IsObsolete()) {
-                    TakeOffBuff(buffId);
-                    continue;
-                }
-                if (buffData.CanHandle())
-                {
-                    buffData.Handle();
-                }
-            }
-        }
+        characterData.HandleAllBuffs();
 #endregion
     }
 
@@ -250,8 +209,9 @@ public class Character : MonoBehaviour
         var skillData = currentSkill.skillData;
         if (IsSpelling())
         {
+            var skillProjectData = currentSkill as SkillProjectData; // tmppppp
             Gizmos.color = Color.yellow;
-            Gizmos.DrawSphere(currentSkill.endPos, skillData.maxRadius);
+            Gizmos.DrawSphere(skillProjectData.endPos, skillData.maxRadius);
         }
         Gizmos.color = oldColor;
     }
@@ -287,7 +247,7 @@ public class Character : MonoBehaviour
         return skillData.isCoolDowning;
     }
 
-    public void TakeDamege(int damge)
+    public void TakeDamage(int damge)
     {
         if (IsDead()) return;
         characterData.HP = Mathf.Max(0, characterData.HP - damge);
@@ -295,7 +255,7 @@ public class Character : MonoBehaviour
         {
             characterData.CharacterState = CharacterState.Dead;
             StopMove();
-            CleanBuff();
+            characterData.TakeOffAllBuffs();
             MyUtility.MyDebug("<color=#00FF00> === [{0}] is dead === </color>", characterData.name);
         }
     }
@@ -304,39 +264,7 @@ public class Character : MonoBehaviour
     {
         if (buffData == null || IsDead()) return;
         waitingAddBuffList.Add(buffData);
-        //MyUtility.MyDebug("PutOnBuff[{0}]:{1}", characterData.name, buffData.name);
-    }
-
-    public void TakeOffBuff(int buffId)
-    {
-        BuffData buffData = GetBuffData(buffId);
-        if (buffData != null) {
-            if (buffData.isEnable) {
-                waitingRemoveBuffList.Add(buffId);
-            }
-            buffData.KillSelf();
-        }
-    }
-
-    public BuffData GetBuffData(int buffId) {
-        BuffData buffData;
-        if (buffIdToBuffDataDict.TryGetValue(buffId, out buffData)) {
-            return buffData;
-        }
-        return null;
-    }
-
-    public void CleanBuff()
-    {
-        foreach (var item in buffIdToBuffDataDict)
-        {
-            BuffData buffData = item.Value;
-            TakeOffBuff(buffData.id);
-        }
-    }
-    public bool CanIssueSkill()
-    {
-        return characterData.CharacterState != CharacterState.Dead;
+        MyUtility.MyDebug("PutOnBuff[{0}]:{1}", characterData.name, buffData.name);
     }
 
     public bool CanMove()
@@ -353,6 +281,12 @@ public class Character : MonoBehaviour
     public bool IsSpelling()
     {
         return characterData.CharacterState == CharacterState.Spelling;
+    }
+
+    public bool CanIssueSkill()
+    {
+        if (IsDead()) return false;
+        return true;
     }
 
     public int GetHP()

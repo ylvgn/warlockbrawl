@@ -85,6 +85,19 @@ public class SkillData
     public bool IsSpelling() {
         return spellingIntervalTime > 0 && durationTime > 0;
     }
+
+    public static SkillBehaviourData MakeBehaviourData(Character owner, SkillData skillData)
+    {
+        if (skillData == null || owner == null)
+        {
+            Debug.LogError("[SkillData] MakeBehaviourData 传入参数错误");
+            return null;
+        }
+
+        if (skillData.flySpeed > 0) return new SkillProjectData(owner, skillData);
+        if (skillData.IsInstance()) return new SkillMountBuffData(owner, skillData);
+        return null;
+    }
 }
 
 

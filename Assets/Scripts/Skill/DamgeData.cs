@@ -41,6 +41,12 @@ public struct DamgeData
         MyUtility.MyDebug("<color=#FFFF00>[{0}]</color> 使用{1} 打中 <color=#FFFF00>[{2}]</color>", ownerData.name, skillData.name, enemyData.name);
     }
 
+    public DamgeData(int physicalDamage_, int magicalDamage_)
+    {
+        physicalDamage = physicalDamage_;
+        magicalDamage = magicalDamage_;
+    }
+
     public int CalcDamage() {
         return physicalDamage + magicalDamage;
     }

@@ -60,14 +60,4 @@ public class ResManager : MonoBehaviour
     {
         return GameObject.Instantiate<GameObject>(UIIndicatorPrefab, character.transform).GetComponent<UISkillIndicator>();
     }
-
-    // tmp
-    public BuffData CreateBuff(int buffId, Character owner)
-    {
-        if (buffId == 1) {
-            return new DropHPBuffData(1, owner, 100, 3, 5);
-        }
-        return null;
-    }
-
 }

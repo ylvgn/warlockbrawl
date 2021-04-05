@@ -2,19 +2,17 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public abstract class SkillProject : MonoBehaviour
+public abstract class SkillProject : MonoBehaviour, IDamage
 {
     public SkillProjectData SkillProjectData { get; protected set; }
     protected Vector3 StartPos { get; set; }
+    protected Character Owner { get; set; }
 
     public virtual void Init(SkillProjectData skillProjectData_)
     {
         SkillProjectData = skillProjectData_;
-        StartPos = getOwner().transform.position;
-    }
-
-    public Character getOwner() {
-        return SkillProjectData.owner;
+        Owner = GetOwner() as Character; // tmp
+        StartPos = Owner.transform.position;
     }
 
     public SkillData getSkillData() {
@@ -31,4 +29,11 @@ public abstract class SkillProject : MonoBehaviour
     }
 
     public abstract void OnCollisionEnter(Collision collision);
+
+    public IAttackable GetOwner()
+    {
+        return SkillProjectData.owner;
+    }
+
+    public abstract DamgeData GetDamage(IAttackable other);
 }

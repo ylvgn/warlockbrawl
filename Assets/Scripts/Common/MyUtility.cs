@@ -38,7 +38,12 @@ public static class MyUtility
         }
         return res;
     }
-    
+
+    public static void SetWidthAndHeight(RectTransform rect, float width = 0f, float height = 0f)
+    {
+        rect.sizeDelta = new Vector2(width, height);
+    }
+
     public static void MyDebug(string format, params object[] args)
     {
         Debug.Log("<color=#00FF00> MyDebug: </color>" + string.Format(format, args));

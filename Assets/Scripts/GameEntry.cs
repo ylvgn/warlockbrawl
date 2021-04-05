@@ -9,8 +9,9 @@ public class GameEntry : MonoBehaviour
     // Config
     public static Dictionary<string, SkillData> MySkillConfig = new Dictionary<string, SkillData>()
     {
-        { "FireBall", new SkillData(1, "Fireball", "Effect/FireBall", 3, 100, 3, RangeType.Point) },
-        { "SnowStorm", new SkillData(2, "Fireball", "Effect/SnowStorm", 5, 15, 3, RangeType.Circle, 10, 2) },
+        { "FireBall", new SkillData(1, "Fireball", "Effect/FireBall", 3, 15, 1, RangeType.DirectLine) },
+        { "SnowStorm", new SkillData(2, "SnowStorm", "Effect/SnowStorm", 5, 15, 3, RangeType.Circle, 10, 2) },
+        { "ArmorBarrier", new SkillData(3, "ArmorHalo", "Effect/ArmorBarrier", 5) },
     };
 
     void Start()
@@ -20,6 +21,7 @@ public class GameEntry : MonoBehaviour
         {
             MySkillConfig["FireBall"],
             MySkillConfig["SnowStorm"],
+            MySkillConfig["ArmorBarrier"],
         };
         CharacterData characterData = new CharacterData("MyCharacter");
 

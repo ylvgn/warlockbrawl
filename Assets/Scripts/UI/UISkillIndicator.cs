@@ -45,9 +45,16 @@ public class UISkillIndicator : MonoBehaviour
         float range = skillData.maxRange;
         float radius = skillData.maxRadius;
 
+        indicatorImg.transform.localScale = Vector3.one;
+        indicatorImg.transform.localPosition = Vector3.zero;
+        MyUtility.SetWidthAndHeight(indicatorImg.rectTransform, 1, 1);
+        MyUtility.SetWidthAndHeight(indicatorRangeImg.rectTransform, 1, 1);
+
+        // special config
         switch (RangeType)
         {
             case RangeType.None:
+                indicatorImg.gameObject.SetActive(false);
                 break;
             case RangeType.Point:
                 indicatorImg.transform.localScale = new Vector3(radius, radius, 1);
@@ -60,7 +67,6 @@ public class UISkillIndicator : MonoBehaviour
                 indicatorRangeImg.gameObject.SetActive(true);
                 break;
             case RangeType.DirectLine:
-                indicatorImg.transform.localScale = new Vector3(5, 5, 1);
                 break;
             default:
                 break;
@@ -69,11 +75,13 @@ public class UISkillIndicator : MonoBehaviour
         isEnable = true;
     }
 
-
     public void Show(RaycastHit hit, Transform player)
     {
         if (!isEnable) return;
         float skillRange = curSkillData.maxRange;
+        float skillRadius = curSkillData.maxRadius;
+        var dir = (hit.point - player.position).normalized;
+
         switch (curSkillData.RangeType)
         {
             case RangeType.None:
@@ -86,13 +94,16 @@ public class UISkillIndicator : MonoBehaviour
                 break;
             case RangeType.Circle:
                 float distance = Vector3.Distance(player.position, hit.point);
-                var dir = hit.point - player.position;
                 if (distance >= skillRange / 2.0f) distance = skillRange / 2.0f;
-                Debug.DrawLine(player.position, player.position + dir.normalized * distance, Color.blue);
+                Debug.DrawLine(player.position, player.position + dir.normalized * distance, Color.red);
                 indicatorImg.transform.position = player.position + dir.normalized * distance;
                 break;
             case RangeType.DirectLine:
-                indicatorImg.transform.position = hit.point;
+                MyUtility.SetWidthAndHeight(indicatorImg.rectTransform, skillRadius, skillRange);
+                var rotation = Quaternion.LookRotation(dir);
+                var angle = rotation.eulerAngles;
+                indicatorImg.transform.rotation = Quaternion.Euler(90, angle.y, 0);
+                indicatorImg.transform.position = player.position + (dir * skillRange / 2.0f); // tmp 有问题 ..
                 Debug.DrawLine(player.position, hit.point, Color.red);
                 break;
             default:

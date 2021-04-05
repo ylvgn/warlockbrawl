@@ -8,6 +8,7 @@ public class PlayerController : MonoBehaviour
     public Character character;
     public UISkillIndicator indicatorController;
     private HUD HUD;
+    public bool isEnable;
 
     public static PlayerController Instance => _instance;
     static PlayerController _instance = null;
@@ -26,13 +27,20 @@ public class PlayerController : MonoBehaviour
         indicatorController = MyUtility.GetComponentInChildren<UISkillIndicator>(transform);
         HUD = MyUtility.GetComponentInChildren<HUD>(transform);
         canClickMouse = false;
+        isEnable = true;
     }
 
     void Update()
     {
+        if (!isEnable) return;
+        if (character.IsDead()) {
+            indicatorController.CancleSkill();
+            isEnable = false;
+            return;
+        }
+
         RaycastHit hit;
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-        if (character.IsDead()) return;
 
         if (Physics.Raycast(ray, out hit, Mathf.Infinity))
         {

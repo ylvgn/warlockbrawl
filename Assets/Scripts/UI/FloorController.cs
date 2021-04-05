@@ -1,24 +1,21 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using System;
 
 public class FloorController : MonoBehaviour
 {
-    bool isEnable;
+    private bool isEnable;
     private int timerId;
     private float maxRadius;
     public float curRadius { get; private set;}
+    Dictionary<Character, float> characterAddBuffStartTimeDict;
+    int DropHPBuffID = 1; // tmp
 
     [Header("Config")]
+    public Transform floorBorder;
     public float floorShrinkDelayTime = 3f;
     public float floorShrinkIntervalTime = 2f;
-    public Transform floorBorder;
-    public AnimationCurve floorShrinkCurve;
-
     public float intervalAddBuffTime = 4f;
-    Dictionary<Character, float> characterAddBuffStartTimeDict;
-    private int DropHPBuffID = 1; // tmp
 
     void Awake()
     {
@@ -35,33 +32,32 @@ public class FloorController : MonoBehaviour
     void Update()
     {
         if (!isEnable || StatsManager.Instance == null) return;
-        if (StatsManager.Instance.characterList != null)
+        if (StatsManager.Instance.characterList == null) return;
+
+        var characterList = StatsManager.Instance.characterList;
+        if (characterList.Count > 0)
         {
-            var characterList = StatsManager.Instance.characterList;
-            if (characterList.Count > 0)
-            {
-                foreach(var character in characterList) {
-                    float dist = Vector3.Distance(Vector3.zero, character.transform.position);
-                    Debug.DrawLine(Vector3.zero, character.transform.position, Color.green);
-                    if (dist >= curRadius) // 站岩浆越久，扣血越多
+            foreach(var character in characterList) {
+                float dist = Vector3.Distance(Vector3.zero, character.transform.position);
+                var characterData = character.CharacterData;
+                var buffData = characterData.GetBuffData(DropHPBuffID);
+                Debug.DrawLine(Vector3.zero, character.transform.position, Color.green);
+                if (dist >= curRadius) // 站岩浆越久，扣血越多
+                {
+                    float startTime;
+                    if (characterAddBuffStartTimeDict.TryGetValue(character, out startTime))
                     {
-                        float startTime;
-                        if (characterAddBuffStartTimeDict.TryGetValue(character, out startTime))
-                        {
-                            if (startTime + intervalAddBuffTime < Time.realtimeSinceStartup) {
-                                BuffData buff = ResManager.Instance.CreateBuff(DropHPBuffID, character);
-                                character.PutOnBuff(buff);
-                                characterAddBuffStartTimeDict[character] = Time.realtimeSinceStartup;
-                            }
-                        } else {
-                            characterAddBuffStartTimeDict.Add(character, Time.realtimeSinceStartup);
-                            BuffData buff = ResManager.Instance.CreateBuff(DropHPBuffID, character);
-                            character.PutOnBuff(buff);
+                        if (startTime + intervalAddBuffTime < Time.realtimeSinceStartup) {
+                            character.PutOnBuff(MakeBuffData(character));
+                            characterAddBuffStartTimeDict[character] = Time.realtimeSinceStartup;
                         }
-                    } else if (character.GetBuffData(DropHPBuffID) != null) { // 回到地面
-                        characterAddBuffStartTimeDict.Remove(character);
-                        character.TakeOffBuff(DropHPBuffID);
+                    } else {
+                        characterAddBuffStartTimeDict.Add(character, Time.realtimeSinceStartup);
+                        character.PutOnBuff(MakeBuffData(character));
                     }
+                } else if (buffData != null) { // 回到地面
+                    characterAddBuffStartTimeDict.Remove(character);
+                    characterData.TakeOffBuff(DropHPBuffID);
                 }
             }
         }
@@ -70,6 +66,7 @@ public class FloorController : MonoBehaviour
     public void ReStart()
     {
         isEnable = true;
+        characterAddBuffStartTimeDict.Clear();
         TimerManager.Instance.RemoveTimer(timerId);
         curRadius = maxRadius;
         float testFloat = 0;
@@ -87,8 +84,8 @@ public class FloorController : MonoBehaviour
         });
     }
 
-    void OnDestroy()
+    DropHPBuffData MakeBuffData(Character owner) // tmp
     {
-        Shader.SetGlobalFloat("testFloat", 0.1f);
+        return new DropHPBuffData(owner, 100, 3, 5);
     }
 }

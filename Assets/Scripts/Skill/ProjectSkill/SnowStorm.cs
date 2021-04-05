@@ -12,18 +12,16 @@ public class SnowStorm : SkillProject
     public override void Init(SkillProjectData data)
     {
         base.Init(data);
-        var owner = getOwner();
         var skillData = getSkillData();
-        Vector3 dir = getDir();
-        float offsetY = owner.characterController.height;
-        startPos = owner.transform.position + new Vector3(0, offsetY + 10, 0);
+        float offsetY = Owner.characterController.height;
         transform.position = new Vector3(9999, 9999, 9999);
-        GameObject.Destroy(gameObject, skillData.durationTime);
+        startPos = Owner.transform.position + new Vector3(0, offsetY + 10, 0);
         isRoot = true;
         isEnable = true;
+        GameObject.Destroy(gameObject, skillData.durationTime);
     }
 
-    private SnowStorm CloneSelf(SkillProjectData data)
+    private SnowStorm CloneSelf()
     {
         var skillData = getSkillData();
         float skillRadius = skillData.maxRadius;
@@ -36,6 +34,7 @@ public class SnowStorm : SkillProject
         Vector3 lookDir = endPos - res.transform.position;
         res.transform.rotation = Quaternion.LookRotation(lookDir);
         res.SkillProjectData = SkillProjectData;
+        res.Owner = Owner;
         res.isEnable = true;
         GameObject.Destroy(res.gameObject, startPos.y / skillData.flySpeed + 1.0f); // 1s延迟
         //MyUtility.MyDebug("src:{0} dest:{1} PosOffset:{2} Radius:{3}", getEndPos(), endPos, randomPosOffset, skillRadius);
@@ -46,24 +45,19 @@ public class SnowStorm : SkillProject
     {
         if (!isEnable) return;
         var skillData = getSkillData();
-        if (isRoot)
-        {
-            var owner = getOwner();
-            if (!owner.IsSpelling())
-            {
+        if (isRoot) {
+            if (!Owner.IsSpelling()) {
                 GameObject.Destroy(gameObject);
                 return;
             }
 
-            // 每隔 spellingIntervalTime 秒后执行1次
-            if (Time.realtimeSinceStartup - startTime >= skillData.spellingIntervalTime)
-            {
+            // 每隔 spellingIntervalTime 秒执行1次
+            if (Time.realtimeSinceStartup - startTime >= skillData.spellingIntervalTime) {
                 startTime = Time.realtimeSinceStartup;
                 for (int i = 0; i < 5; i ++) // tmp
-                    CloneSelf(SkillProjectData);
+                    CloneSelf();
             }
-        } else
-        {
+        } else {
             transform.Translate(Vector3.forward * skillData.flySpeed * Time.deltaTime);
         }
     }
@@ -75,14 +69,19 @@ public class SnowStorm : SkillProject
         if (same) return;
 
         Character enemy = collision.gameObject.GetComponent<Character>();
-        var owner = getOwner();
-        if (enemy == owner) return;
+        if (enemy == Owner) return;
         if (enemy && !enemy.IsDead())
         {
-            var skillData = getSkillData();
-            DamgeData damge = new DamgeData(owner.CharacterData, skillData, enemy.CharacterData);
-            enemy.TakeDamege(damge.CalcDamage());
+            DamgeData damge = GetDamage(enemy);
+            enemy.TakeDamage(damge.CalcDamage());
         }
         GameObject.Destroy(gameObject);
+    }
+
+    public override DamgeData GetDamage(IAttackable other)
+    {
+        var skillData = getSkillData();
+        var enemy = other as Character;
+        return new DamgeData(Owner.CharacterData, skillData, enemy.CharacterData);
     }
 }
