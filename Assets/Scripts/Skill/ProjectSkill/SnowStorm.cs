@@ -67,21 +67,16 @@ public class SnowStorm : SkillProject
         if (!isEnable) return;
         var same = collision.gameObject.GetComponent<SnowStorm>();
         if (same) return;
-
-        Character enemy = collision.gameObject.GetComponent<Character>();
-        if (enemy == Owner) return;
-        if (enemy && !enemy.IsDead())
-        {
-            DamgeData damge = GetDamage(enemy);
-            enemy.TakeDamage(damge.CalcDamage());
-        }
-        GameObject.Destroy(gameObject);
+        base.OnCollisionEnter(collision);
     }
 
     public override DamgeData GetDamage(IAttackable other)
     {
         var skillData = getSkillData();
         var enemy = other as Character;
-        return new DamgeData(Owner.CharacterData, skillData, enemy.CharacterData);
+        if (enemy) return new DamgeData(Owner.CharacterData, skillData, enemy.CharacterData);
+        var obstacle = other as MyObstacle;
+        if (obstacle) return new DamgeData(5, 0);
+        return default(DamgeData);
     }
 }

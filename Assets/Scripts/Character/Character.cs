@@ -250,7 +250,7 @@ public class Character : MonoBehaviour, IAttackable
     public void TakeDamage(int damge)
     {
         if (IsDead()) return;
-        characterData.HP = Mathf.Max(0, characterData.HP - damge);
+        characterData.health.SetHP(GetHP() - damge);
         if (GetHP() == 0)
         {
             characterData.CharacterState = CharacterState.Dead;
@@ -291,12 +291,12 @@ public class Character : MonoBehaviour, IAttackable
 
     public int GetHP()
     {
-        return characterData.HP;
+        return characterData.health.HP;
     }
 
     public int GetMP()
     {
-        return characterData.MP;
+        return characterData.health.MP;
     }
 
     void StopSpelling(CharacterState state = CharacterState.Idle)

@@ -28,7 +28,15 @@ public abstract class SkillProject : MonoBehaviour, IDamage
         return SkillProjectData.endPos;
     }
 
-    public abstract void OnCollisionEnter(Collision collision);
+    public virtual void OnCollisionEnter(Collision collision) {
+        IAttackable something = collision.gameObject.GetComponent<IAttackable>();
+        if (something == GetOwner()) return;
+        if (something != null && something.GetHP() > 0) {
+            var damge = GetDamage(something);
+            something.TakeDamage(damge.CalcDamage());
+        }
+        GameObject.Destroy(gameObject);
+    }
 
     public IAttackable GetOwner()
     {

@@ -33,26 +33,28 @@ public class ResManager : MonoBehaviour
         return character;
     }
 
-    public HUD BuildHUD<T>(T go, int maxHP)
+    public HUD BuildHUD(Character character, HealthData healthData)
     {
         HUD res = null;
-        if (typeof(T) == typeof(Character)) {
-            var character = go as Character;
-            var playerHeight = character.characterController.height;
-            var obj = GameObject.Instantiate<GameObject>(UIHUDPrefab, character.transform);
-            res = obj.GetComponent<HUD>();
-            var HUDRect = obj.GetComponent<RectTransform>();
-            HUDRect.localPosition = new Vector3(0, playerHeight, 0);
-        } else if (typeof(T) == typeof(GameObject)) {
-            var obj = go as GameObject;
-            res = GameObject.Instantiate<GameObject>(UIHUDPrefab, obj.transform).GetComponent<HUD>();
-            var HUDRect = res.GetComponent<RectTransform>();
-            float meshHeight = obj.GetComponent<MeshFilter>().sharedMesh.bounds.size.y;
-            float scaleY =transform.lossyScale.y;
-            float height = meshHeight * scaleY;
-            HUDRect.localPosition = new Vector3(0, height, 0);
-        }
-        if (res != null) res.Init(maxHP);
+        var playerHeight = character.characterController.height;
+        var obj = GameObject.Instantiate<GameObject>(UIHUDPrefab, character.transform);
+        res = obj.GetComponent<HUD>();
+        var HUDRect = obj.GetComponent<RectTransform>();
+        HUDRect.localPosition = new Vector3(0, playerHeight, 0);
+        if (res != null) res.Init(healthData.maxHP);
+        return res;
+    }
+
+    public HUD BuildHUD(GameObject obj, HealthData healthData)
+    {
+        HUD res = null;
+        res = GameObject.Instantiate<GameObject>(UIHUDPrefab, obj.transform).GetComponent<HUD>();
+        var HUDRect = res.GetComponent<RectTransform>();
+        var localScale = obj.transform.localScale;
+        float height = obj.GetComponent<Collider>().bounds.size.y;
+        HUDRect.localScale = new Vector3(1.0f / localScale.x, 1.0f / localScale.y, 1.0f / localScale.z);
+        HUDRect.localPosition = new Vector3(0, (height / 2 * HUDRect.localScale.y) + HUDRect.localScale.y, 0);
+        if (res != null) res.Init(healthData.maxHP);
         return res;
     }
 

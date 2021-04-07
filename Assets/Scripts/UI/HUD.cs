@@ -12,10 +12,11 @@ public class HUD : MonoBehaviour
     private Image healthImg;
     private RectTransform healthImgRect;
     public AnimationCurve animationCurve;
-    private Character character;
+    private IAttackable owner;
+
     void Awake()
     {
-        character = MyUtility.GetComponentInParent<Character>(transform);
+        owner = MyUtility.GetComponentInParent<IAttackable>(transform);
         healthImgRect = MyUtility.GetComponent<RectTransform>(transform, "bg/health");
         healthImg = MyUtility.GetComponent<Image>(transform, "bg/health");
         animationCurve.AddKey(0, 0);
@@ -32,11 +33,11 @@ public class HUD : MonoBehaviour
 
     void Update()
     {
-        if (character != null && healthMax > 0)
+        if (owner != null && healthMax > 0)
         {
-            if (character.GetHP() != healthValue)
+            if (owner.GetHP() != healthValue)
             {
-                SetData(character.GetHP());
+                SetData(owner.GetHP());
             }
         }
     }

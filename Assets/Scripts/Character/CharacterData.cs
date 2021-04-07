@@ -25,12 +25,8 @@ public enum CharacterState
 public class CharacterData
 {
     public string name;
-    public bool isAlive;
     public bool canMove;
-    public int HP;
-    public int MP;
-    public int maxHP = 100;
-    public int maxMP = 100;
+    public HealthData health;
     public float moveSpeed = 5f;
     public float rotateSmoothTime = 1f;
     public float rotateSpeedMovement = 0.5f;
@@ -55,12 +51,12 @@ public class CharacterData
     public CharacterData(string name_)
     {
         name = name_;
-        HP = maxHP;
-        MP = maxMP;
+        health = new HealthData(100, 100);
         skillIdToSkillDataDict = new Dictionary<int, SkillData>();
         buffIdToBuffDataDict = new Dictionary<int, BuffData>();
     }
 
+#region skill
     public void LearnSkill(SkillData skillData)
     {
         int skillId = skillData.id;
@@ -80,6 +76,7 @@ public class CharacterData
         Debug.LogError(string.Format("找不到skillId={0}的数据", skillId));
         return res;
     }
+#endregion
 
 #region buff
     public BuffData GetBuffData(int buffId)
@@ -127,7 +124,6 @@ public class CharacterData
         }
     }
 
-    // 摘掉buff
     public void TakeOffBuff(int buffId)
     {
         BuffData buffData = GetBuffData(buffId);

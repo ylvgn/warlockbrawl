@@ -31,7 +31,7 @@ public class GameEntry : MonoBehaviour
             UISkillPanel.AddSkill(skillData);
         }
 
-        ResManager.Instance.BuildHUD<Character>(myCharacter, myCharacter.CharacterData.maxHP);
+        ResManager.Instance.BuildHUD(myCharacter, myCharacter.CharacterData.health);
         ResManager.Instance.BuildSkillIndicator(myCharacter);
         myCharacter.gameObject.AddComponent<PlayerController>();
 
@@ -40,7 +40,7 @@ public class GameEntry : MonoBehaviour
         var myAICharacter = ResManager.Instance.CreateCharacter(AICharacterData, "Assets/Resources/Player/Animators/AIMage.controller");
         myAICharacter.SetData(AICharacterData);
         myAICharacter.LearnSkill(new SkillData(1, "Fireball", "Effect/FireBall", 3, 100, 5, RangeType.Point));
-        ResManager.Instance.BuildHUD<Character>(myAICharacter, myAICharacter.CharacterData.maxHP);
+        ResManager.Instance.BuildHUD(myAICharacter, myAICharacter.CharacterData.health);
         myAICharacter.gameObject.AddComponent<AIController>();
 
         // stats

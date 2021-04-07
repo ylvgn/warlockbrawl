@@ -5,7 +5,6 @@ using UnityEngine;
 public class FireBall : SkillProject
 {   
     private bool isEnable;
-
     public override void Init(SkillProjectData data) {
         base.Init(data);
         if (Owner.IsDead()) {
@@ -34,19 +33,16 @@ public class FireBall : SkillProject
     
     public override void OnCollisionEnter(Collision collision) {
         if (!isEnable) return;
-        Character enemy = collision.gameObject.GetComponent<Character>();
-        if (enemy == Owner) return;
-        if (enemy && !enemy.IsDead()) {
-            var damge = GetDamage(enemy);
-            enemy.TakeDamage(damge.CalcDamage());
-        }
-        GameObject.Destroy(gameObject);
+        base.OnCollisionEnter(collision);
     }
 
     public override DamgeData GetDamage(IAttackable other)
     {
         var skillData = getSkillData();
         var enemy = other as Character;
-        return new DamgeData(Owner.CharacterData, skillData, enemy.CharacterData);
+        if (enemy) return new DamgeData(Owner.CharacterData, skillData, enemy.CharacterData);
+        var obstacle = other as MyObstacle;
+        if (obstacle) return new DamgeData(10, 0);
+        return default(DamgeData);
     }
 }
