@@ -1074,6 +1074,7 @@ GameObject:
   - component: {fileID: 1502397734}
   - component: {fileID: 1502397735}
   - component: {fileID: 1502397736}
+  - component: {fileID: 1502397737}
   m_Layer: 0
   m_Name: Managers
   m_TagString: Untagged
@@ -1161,6 +1162,19 @@ MonoBehaviour:
     type: 3}
   UIHUDPrefab: {fileID: 3314547851169522, guid: 6c85f43765718eb4cb65dc4d9b188dd7,
     type: 3}
+--- !u!114 &1502397737
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1502397730}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0b56eca5499e2ec4eaee627fd50efca9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  floorController: {fileID: 1032852010}
 --- !u!1 &1991899494
 GameObject:
   m_ObjectHideFlags: 0
