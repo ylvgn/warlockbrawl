@@ -4,29 +4,28 @@ using UnityEngine;
 
 public class SkillMountBuff : MonoBehaviour
 {
-    private SkillMountBuffData SkillMountBuffData;
-    public SkillProjectData SkillProjectData { get; protected set; }
+    public SkillMountBuffData SkillMountBuffData { get; protected set; }
     protected bool isEnable;
 
     public virtual void Init(SkillMountBuffData skillMountBuffData_)
     {
         SkillMountBuffData = skillMountBuffData_;
-        //isEnable = true; 需要子类设置isEnable  // tmp
     }
 
     public virtual void Update()
     {
         if (!isEnable) return;
-        if (CheckIsEnable())
+        if (!CheckIsEnable())
         {
-            isEnable = false;
+            Debug.Log($"{SkillMountBuffData.buffData.type} 已过期" );
             GameObject.Destroy(gameObject);
+            isEnable = false;
         }
     }
 
-    public BuffData GetBuffData()
+    public T GetBuffData<T>() where T : BuffData
     {
-        return SkillMountBuffData.buffData;
+        return SkillMountBuffData.buffData as T;
     }
 
     public Character GetOwner()
@@ -34,11 +33,11 @@ public class SkillMountBuff : MonoBehaviour
         return SkillMountBuffData.owner;
     }
 
-    public bool CheckIsEnable()
+    public virtual bool CheckIsEnable()
     {
         var owner = GetOwner();
-        var buffData = GetBuffData();
-        if (owner.IsDead() || buffData.IsObsolete() || owner.CharacterData.GetBuffData(buffData.id) == null) return false;
+        var buffData = GetBuffData<BuffData>();
+        if (owner.IsDead() || buffData.IsObsolete() || owner.CharacterData.GetBuffData(buffData.type) == null) return false;
         return true;
     }
 }

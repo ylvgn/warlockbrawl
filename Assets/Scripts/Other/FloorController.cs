@@ -9,7 +9,6 @@ public class FloorController : MonoBehaviour
     private float maxRadius;
     public float curRadius { get; private set;}
     Dictionary<Character, float> characterAddBuffStartTimeDict;
-    int DropHPBuffID = 1; // tmp
 
     [Header("Config")]
     public Transform floorBorder;
@@ -32,15 +31,15 @@ public class FloorController : MonoBehaviour
     void Update()
     {
         if (!isEnable || StatsManager.Instance == null) return;
-        if (StatsManager.Instance.characterList == null) return;
+        if (StatsManager.Instance.CharacterList == null) return;
 
-        var characterList = StatsManager.Instance.characterList;
+        var characterList = StatsManager.Instance.CharacterList;
         if (characterList.Count > 0)
         {
             foreach(var character in characterList) {
                 float dist = Vector3.Distance(Vector3.zero, character.transform.position);
                 var characterData = character.CharacterData;
-                var buffData = characterData.GetBuffData(DropHPBuffID);
+                var buffData = characterData.GetBuffData(BuffType.DropHP);
                 Debug.DrawLine(Vector3.zero, character.transform.position, Color.green);
                 if (dist >= curRadius) // 站岩浆越久，扣血越多
                 {
@@ -57,7 +56,7 @@ public class FloorController : MonoBehaviour
                     }
                 } else if (buffData != null) { // 回到地面
                     characterAddBuffStartTimeDict.Remove(character);
-                    characterData.TakeOffBuff(DropHPBuffID);
+                    characterData.TakeOffBuff(BuffType.DropHP);
                 }
             }
         }

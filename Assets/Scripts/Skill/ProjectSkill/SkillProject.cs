@@ -7,7 +7,6 @@ public abstract class SkillProject : MonoBehaviour, IDamage
     public SkillProjectData SkillProjectData { get; protected set; }
     protected Vector3 StartPos { get; set; }
     protected Character Owner { get; set; }
-
     public virtual void Init(SkillProjectData skillProjectData_)
     {
         SkillProjectData = skillProjectData_;
@@ -15,23 +14,27 @@ public abstract class SkillProject : MonoBehaviour, IDamage
         StartPos = Owner.transform.position;
     }
 
-    public SkillData getSkillData() {
+    public SkillData GetSkillData() {
         return SkillProjectData.skillData;
     }
 
-    public Vector3 getDir() {
+    public Vector3 GetDir() {
         return SkillProjectData.GetDir();
     }
 
-    public Vector3 getEndPos()
+    public void ReSetData(Character owner_, Vector3 dir_)
     {
-        return SkillProjectData.endPos;
+        SkillProjectData.owner = owner_;
+        Owner = owner_;
+        SkillProjectData.SetDir(dir_);
+        transform.rotation = Quaternion.LookRotation(SkillProjectData.GetDir());
     }
 
     public virtual void OnCollisionEnter(Collision collision) {
         IAttackable something = collision.gameObject.GetComponent<IAttackable>();
         if (something == GetOwner()) return;
-        if (something != null && something.GetHP() > 0) {
+        if (something != null ) {
+            if (something.GetHP() == 0) return;
             var damge = GetDamage(something);
             something.TakeDamage(damge.CalcDamage());
         }
@@ -42,6 +45,5 @@ public abstract class SkillProject : MonoBehaviour, IDamage
     {
         return SkillProjectData.owner;
     }
-
     public abstract DamgeData GetDamage(IAttackable other);
 }

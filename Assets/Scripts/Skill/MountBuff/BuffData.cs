@@ -1,40 +1,45 @@
 ﻿using UnityEngine;
 
-public enum BuffType
+public enum BuffMode
 {
     Static,
     PerSingleSecond,
 }
 
-public abstract class BuffData : IDamage
+public enum BuffType
 {
-    public int id { get; private set; }
+    None,
+    DropHP,
+    ArmorBarrier,
+}
+
+[System.Serializable]
+public abstract class BuffData
+{
+    public BuffType type { get; private set; }
     public IAttackable owner { get; protected set; }
     public string name { get; protected set; }
     public float duringTime {get; protected set; }
     public float intervalTime { get; protected set; }
     public float startTime { get; protected set; }
-    public BuffType BuffType { get; protected set; }
+    public BuffMode BuffMode { get; protected set; }
     public bool canOverlay { get; protected set; } // 是否可叠加buff
     public bool isEnable { get; protected set; }
 
-    public BuffData(int buffId)
-    {
-        id = buffId;
-    }
-
-    public BuffData(int buffId, IAttackable owner_, float duringTime_, float intervalTime_)
+    public BuffData(BuffType type_, IAttackable owner_, float duringTime_, BuffMode buffMode_ = BuffMode.Static, float intervalTime_ = 0)
     {
         if (duringTime_ <= 0) {
             Debug.LogError("[BuffData} 传入duringTime 必须是正数！duringTime=" + duringTime_);
         }
 
-        if (intervalTime_ <= 0) {
+        if (buffMode_ == BuffMode.PerSingleSecond && intervalTime_ <= 0) {
             Debug.LogError("[BuffData} 传入intervalTime 必须是正数！intervalTime=" + intervalTime_);
         }
 
-        id = buffId;
+        type = type_;
+        name = type_.ToString();
         owner = owner_;
+        BuffMode = buffMode_;
         duringTime = duringTime_;
         intervalTime = intervalTime_;
         startTime = Time.realtimeSinceStartup;
@@ -43,6 +48,10 @@ public abstract class BuffData : IDamage
 
     public virtual bool CanHandle()
     {
+        if (owner == null)
+        {
+            Debug.LogError($"[{type}]未初始化完成");
+        }
         if (!isEnable) return false;
         if (IsObsolete()) return false;
         return true;
@@ -70,9 +79,9 @@ public abstract class BuffData : IDamage
 
     public virtual void ResetData(BuffData buffData)
     {
-        if (id == 0) id = buffData.id;
-        if (id != buffData.id) {
-            Debug.LogError(string.Format("[BuffData] ResetData 传入的buffId前后不一致 before_id={0} now_id={1}", id, buffData.id));
+        if (type == BuffType.None) type = buffData.type;
+        if (type != buffData.type) {
+            Debug.LogError(string.Format("[BuffData] ResetData 传入的buffId前后不一致 before_buff_type={0} now_buff_type={1}", type, buffData.type));
             return;
         }
 
@@ -90,11 +99,4 @@ public abstract class BuffData : IDamage
     }
 
     public abstract void Handle();
-    
-    public IAttackable GetOwner()
-    {
-        return owner;
-    }
-
-    public abstract DamgeData GetDamage(IAttackable other);
 }

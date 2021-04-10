@@ -39,6 +39,7 @@ public class SkillData
         float coolDownTime_,
         float maxRange_ = 0,
         float maxRadius_ = 0,
+        float flySpeed_ = 0,
         RangeType RangeType_ = RangeType.None,
         float durationTime_ = 0,
         float spellingIntervalTime_ = 0
@@ -62,10 +63,10 @@ public class SkillData
         maxRadius = maxRadius_;
         durationTime = durationTime_;
         spellingIntervalTime = spellingIntervalTime_;
+        flySpeed = flySpeed_;
 
         // ----------- temp
         basicDamage = 10;        
-        flySpeed = 10;
         fire = 0;
         ice = 0;
         thunder = 0;

@@ -13,7 +13,7 @@ public class UISkillPanel : MonoBehaviour
     void Awake()
     {
         if (itemPrefab == null) {
-            Debug.LogError("UISkillPanel 未绑定 itemPrefab!");
+            Debug.LogError("[UISkillPanel] itemPrefab == null");
         } else {
             var gridTrans = MyUtility.GetComponent<Transform>(transform, "Grid");
             _skillItemList = new List<UISkillPanelItem>();
@@ -56,11 +56,9 @@ public class UISkillPanel : MonoBehaviour
 
         if (skillData.RangeType == RangeType.None) {
             character.IssueSkill(skillData.id);
-            Debug.Log("直接触发skillId= " + skillId);
             return;
         }
 
         PlayerController.Instance.indicatorController.SetData(skillData);
-        Debug.Log("开始引导技能 skillId= " + skillId);
     }
 }

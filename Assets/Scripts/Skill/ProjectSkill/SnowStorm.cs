@@ -12,10 +12,11 @@ public class SnowStorm : SkillProject
     public override void Init(SkillProjectData data)
     {
         base.Init(data);
-        var skillData = getSkillData();
+        var skillData = GetSkillData();
         float offsetY = Owner.characterController.height;
         transform.position = new Vector3(9999, 9999, 9999);
         startPos = Owner.transform.position + new Vector3(0, offsetY + 10, 0);
+        data.SetDir(SkillProjectData.GetEndPos() - startPos);
         isRoot = true;
         isEnable = true;
         GameObject.Destroy(gameObject, skillData.durationTime);
@@ -23,16 +24,14 @@ public class SnowStorm : SkillProject
 
     private SnowStorm CloneSelf()
     {
-        var skillData = getSkillData();
+        var skillData = GetSkillData();
         float skillRadius = skillData.maxRadius;
         float randomX = Random.Range(-skillRadius, skillRadius);
         float rangeZ = Mathf.Sqrt(skillRadius * skillRadius - randomX * randomX); // x² + y² = r²
         float randomZ = Random.Range(-rangeZ, rangeZ); ;
         Vector3 randomPosOffset = new Vector3(randomX, 0, randomZ);
-        Vector3 endPos = getEndPos() + randomPosOffset;
         SnowStorm res = GameObject.Instantiate<GameObject>(gameObject, startPos + randomPosOffset, Quaternion.identity).GetComponent<SnowStorm>();
-        Vector3 lookDir = endPos - res.transform.position;
-        res.transform.rotation = Quaternion.LookRotation(lookDir);
+        res.transform.rotation = Quaternion.LookRotation(SkillProjectData.GetDir());
         res.SkillProjectData = SkillProjectData;
         res.Owner = Owner;
         res.isEnable = true;
@@ -44,7 +43,7 @@ public class SnowStorm : SkillProject
     void Update()
     {
         if (!isEnable) return;
-        var skillData = getSkillData();
+        var skillData = GetSkillData();
         if (isRoot) {
             if (!Owner.IsSpelling()) {
                 GameObject.Destroy(gameObject);
@@ -72,11 +71,13 @@ public class SnowStorm : SkillProject
 
     public override DamgeData GetDamage(IAttackable other)
     {
-        var skillData = getSkillData();
+        var skillData = GetSkillData();
         var enemy = other as Character;
         if (enemy) return new DamgeData(Owner.CharacterData, skillData, enemy.CharacterData);
+
         var obstacle = other as MyObstacle;
         if (obstacle) return new DamgeData(5, 0);
+
         return default(DamgeData);
     }
 }

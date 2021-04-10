@@ -22,7 +22,7 @@ public class ResManager : MonoBehaviour
 
     public Character CreateCharacter(CharacterData characterData, string controllerPath)
     {
-        var playerPrefabs = Resources.Load<GameObject>(("Player/Mage"));
+        var playerPrefabs = Resources.Load<GameObject>("Player/Mage");
         GameObject playerObj = GameObject.Instantiate<GameObject>(playerPrefabs, Vector3.zero, Quaternion.identity);
         var character = playerObj.GetComponent<Character>();
         var animator = playerObj.GetComponent<Animator>();

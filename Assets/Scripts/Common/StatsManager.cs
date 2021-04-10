@@ -6,7 +6,7 @@ public class StatsManager : MonoBehaviour
 {
     public static StatsManager Instance => _instance;
     static StatsManager _instance = null;
-    public List<Character> characterList { get; private set;} 
+    public List<Character> CharacterList { get; private set;} 
 
     void Awake()
     {
@@ -15,12 +15,11 @@ public class StatsManager : MonoBehaviour
             Debug.LogError("重复实例化 StatsManager.instance");
         }
         _instance = this;
-        characterList = new List<Character>();
+        CharacterList = new List<Character>();
     }
 
     public void AddCharacter(Character character)
     {
-        characterList.Add(character);
+        CharacterList.Add(character);
     }
-    
 }

@@ -11,7 +11,7 @@ public class Character : MonoBehaviour, IAttackable
     [SerializeField] private CharacterData characterData = null;
     private Dictionary<int, float> coolingDownSkillStartTimeDict;
     private float spellingstartTime;
-    private SkillBehaviourData currentSkill; // emmmmmm
+    private SkillBehaviourData currentSkill; // tmp
 
 #region buff
     private List<BuffData> waitingAddBuffList;
@@ -21,9 +21,6 @@ public class Character : MonoBehaviour, IAttackable
     [HideInInspector] public NavMeshAgent agent;
     [HideInInspector] public Animator anim;
     [HideInInspector] public CharacterController characterController;
-
-    [Header("Configs")]
-    public Transform weaponIssuePoint; // tmp
 
     [Header("Events")]
     Action onAttackEvent;
@@ -49,7 +46,7 @@ public class Character : MonoBehaviour, IAttackable
     {
         if (!CanMove()) return;
         if (IsSpelling()) StopSpelling();
-        if (characterData.CharacterState == CharacterState.OnAttack) return; // tmp
+        if (agent.destination == endPos && characterData.CharacterState == CharacterState.Moving) return;
         characterData.CharacterState = CharacterState.Moving;
         agent.isStopped = false;
         agent.SetDestination(endPos);
@@ -86,61 +83,77 @@ public class Character : MonoBehaviour, IAttackable
     public void IssueSkill(SkillBehaviourData skillBehaviourData)
     {
         if (IsDead()) return;
-        if (IsSpelling()) return;
-
+        if (IsSpelling()) StopSpelling();
         var skillData = skillBehaviourData.skillData;
         if (skillData == null)
         {
-            Debug.Log("传入参数 skillData == null");
+            Debug.Log($"[{characterData.name}]传入参数 skillData == null");
             return;
         }
         if (!CanIssueSkill()) {
-            Debug.Log("当前状态不能发动技能");
+            Debug.Log($"[{characterData.name}]当前状态{CharacterData.CharacterState}不能发动技能");
             return;
         }
         int skillId = skillData.id;
         if (characterData.GetSkillData(skillId) != skillData)
         {
-            Debug.Log(string.Format("找不到对应的skillId={0}的数据", skillId));
+            Debug.Log($"[{characterData.name}]找不到对应的skillId={skillId}的数据");
             return;
         }
         if (IsSkillCoolDowning(skillId))
         {
-            Debug.Log(string.Format("当前skillId={0}未冷却完成", skillId));
+            Debug.Log($"[{characterData.name}]当前skillId={skillId}未冷却完成");
             return;
         }
 
-        IssueProjectSkill(skillBehaviourData as SkillProjectData); // tmp, SkillMountBuff未写完
-
+        HandleSkillBehaviour(skillBehaviourData);
         skillData.isCoolDowning = true;
         coolingDownSkillStartTimeDict.Add(skillId, Time.realtimeSinceStartup);
-        return;
     }
 
-    
-    void IssueProjectSkill(SkillProjectData skillProjectData)
+    void HandleSkillBehaviour(SkillBehaviourData skillBehaviourData)
     {
-        var skillData = skillProjectData.skillData;
-        currentSkill = skillProjectData;
+        StopMove();
+        var skillData = skillBehaviourData.skillData;
         GameObject prefab = Resources.Load<GameObject>(skillData.resPath);
         if (prefab == null)
         {
             Debug.LogError("找不到Resources资源 path= " + skillData.resPath);
             return;
         }
-        StopMove();
+        if (skillData.RangeType == RangeType.None)
+        {
+            IssueMountBuffSkill(skillBehaviourData as SkillMountBuffData, prefab);
+        } else
+        {
+            IssueProjectSkill(skillBehaviourData as SkillProjectData, prefab);
+        }
+    }
+
+    void IssueMountBuffSkill(SkillMountBuffData skillMountBuffData, GameObject prefab)
+    {
+        var mountBuff = GameObject.Instantiate<GameObject>(prefab, Vector3.zero, Quaternion.identity).GetComponent<SkillMountBuff>();
+        mountBuff.Init(skillMountBuffData);
+    }
+
+    // 弹道
+    void IssueProjectSkill(SkillProjectData skillProjectData, GameObject prefab)
+    {
+        var skillData = skillProjectData.skillData;
+        currentSkill = skillProjectData;
+
         if (skillData.IsBallistic()) {
-            characterData.CharacterState = CharacterState.OnAttack;
+            characterData.CharacterState = CharacterState.OnAttackNoMove; // tmp 角色attack状态 要由skillData里定义？blend 动作？
         } else if (skillData.IsSpelling()) {
             characterData.CharacterState = CharacterState.Spelling;
             spellingstartTime = Time.realtimeSinceStartup;
         }
-
         anim.SetTrigger("Attack");
+        onAttackEvent = null;
         onAttackEvent += () =>
         {
             var skillProject = GameObject.Instantiate<GameObject>(prefab, Vector3.zero, Quaternion.identity).GetComponent<SkillProject>();
-            skillProject.Init(skillProjectData as SkillProjectData);
+            skillProject.Init(skillProjectData);
         };
         TowardDir(skillProjectData.GetDir());
     }
@@ -149,28 +162,10 @@ public class Character : MonoBehaviour, IAttackable
     {
         if (IsDead())
             return;
-        
-        // 技能冷却中
-        if (coolingDownSkillStartTimeDict.Count > 0)
-        {
-            List<int> removeList = new List<int>();
-            foreach(var item in coolingDownSkillStartTimeDict) {
-                var skillData = characterData.GetSkillData(item.Key);
-                float endTime = item.Value + skillData.coolDownTime;
-                if (Time.realtimeSinceStartup >=  endTime && skillData.isCoolDowning) {
-                    skillData.isCoolDowning = false;
-                    removeList.Add(item.Key);
-                }
-            }
 
-            for (int i = 0; i < removeList.Count; i ++) {
-                coolingDownSkillStartTimeDict.Remove(removeList[i]);
-                //Debug.Log("技能冷却完毕skillId:" + removeList[i]);
-            }
-        }
-
+        #region move
         // 角色移动
-        if(!agent.isStopped) {
+        if (!agent.isStopped) {
             float distance = Vector3.Distance(agent.destination, transform.position);
             if (Mathf.Approximately(distance, 0f)) {
                 StopMove();
@@ -179,17 +174,43 @@ public class Character : MonoBehaviour, IAttackable
                 anim.SetFloat("Speed", speed, characterData.moveSpeedDampTime, Time.deltaTime);
             }
         }
+        #endregion
 
-        // Spelling
+        #region skill
+        // skill cool downing
+        if (coolingDownSkillStartTimeDict.Count > 0)
+        {
+            List<int> removeList = new List<int>();
+            foreach (var item in coolingDownSkillStartTimeDict)
+            {
+                var skillData = characterData.GetSkillData(item.Key);
+                float endTime = item.Value + skillData.coolDownTime;
+                if (Time.realtimeSinceStartup >= endTime && skillData.isCoolDowning)
+                {
+                    skillData.isCoolDowning = false;
+                    removeList.Add(item.Key);
+                }
+            }
+
+            for (int i = 0; i < removeList.Count; i++)
+            {
+                coolingDownSkillStartTimeDict.Remove(removeList[i]);
+            }
+        }
+
+        // spelling skill
         if (IsSpelling())
         {
             var skillData = currentSkill.skillData;
             bool isEnd = Time.realtimeSinceStartup - spellingstartTime >= skillData.durationTime;
             if (isEnd)
+            {
                 StopSpelling();
+            }
         }
+        #endregion
 
-#region buff
+        #region buff
         // add buff
         if (waitingAddBuffList.Count > 0)
         {
@@ -199,7 +220,7 @@ public class Character : MonoBehaviour, IAttackable
 
         // handle buff
         characterData.HandleAllBuffs();
-#endregion
+        #endregion
     }
 
     private void OnDrawGizmos()
@@ -209,7 +230,7 @@ public class Character : MonoBehaviour, IAttackable
         var skillData = currentSkill.skillData;
         if (IsSpelling())
         {
-            var skillProjectData = currentSkill as SkillProjectData; // tmppppp
+            var skillProjectData = currentSkill as SkillProjectData; // tmp
             Gizmos.color = Color.yellow;
             Gizmos.DrawSphere(skillProjectData.endPos, skillData.maxRadius);
         }
@@ -232,7 +253,7 @@ public class Character : MonoBehaviour, IAttackable
             if (coolingDownSkillStartTimeDict.TryGetValue(skillId, out res)){
                 return res;
             }
-            Debug.Log(string.Format("找不到skillId={0}的startTimeStamp", skillId));
+            Debug.Log($"[{characterData.name}]找不到skillId={skillId}的startTimeStamp");
         }
         return Time.realtimeSinceStartup;
     }
@@ -255,6 +276,7 @@ public class Character : MonoBehaviour, IAttackable
         {
             characterData.CharacterState = CharacterState.Dead;
             StopMove();
+            currentSkill = null;
             characterData.TakeOffAllBuffs();
             MyUtility.MyDebug("<color=#00FF00> === [{0}] is dead === </color>", characterData.name);
         }
@@ -269,7 +291,7 @@ public class Character : MonoBehaviour, IAttackable
 
     public bool CanMove()
     {
-        if (IsDead()) return false;
+        if (IsDead() || characterData.CharacterState == CharacterState.OnAttackNoMove) return false;
         return true;
     }
 
@@ -285,7 +307,9 @@ public class Character : MonoBehaviour, IAttackable
 
     public bool CanIssueSkill()
     {
-        if (IsDead()) return false;
+        if (IsDead()
+            || characterData.CharacterState == CharacterState.OnAttack
+            || characterData.CharacterState == CharacterState.OnAttackNoMove) return false;
         return true;
     }
 

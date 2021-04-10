@@ -7,21 +7,22 @@ public class GameEntry : MonoBehaviour
     public UISkillPanel UISkillPanel;
 
     // Config
-    public static Dictionary<string, SkillData> MySkillConfig = new Dictionary<string, SkillData>()
+    public static Dictionary<string, System.Func<SkillData>> MySkillConfig = new Dictionary<string, System.Func<SkillData>>()
     {
-        { "FireBall", new SkillData(1, "Fireball", "Effect/FireBall", 3, 15, 1, RangeType.DirectLine) },
-        { "SnowStorm", new SkillData(2, "SnowStorm", "Effect/SnowStorm", 5, 15, 3, RangeType.Circle, 10, 2) },
-        { "ArmorBarrier", new SkillData(3, "ArmorHalo", "Effect/ArmorBarrier", 5) },
+        { "FireBall", () => { return new SkillData(1, "Fireball", "Effect/FireBall", 3, 5, 1, 10, RangeType.DirectLine); } },
+        { "SnowStorm", () => { return new SkillData(2, "SnowStorm", "Effect/SnowStorm", 5, 15, 3, 10, RangeType.Circle, 10, 2); } },
+        { "ArmorBarrier", () => { return new SkillData(3, "ArmorHalo", "Effect/ArmorBarrier", 5, 0, 0, 0, RangeType.None, 10); } },
     };
 
     void Start()
     {
+
         // Test Data
         List<SkillData> skillList = new List<SkillData>()
         {
-            MySkillConfig["FireBall"],
-            MySkillConfig["SnowStorm"],
-            MySkillConfig["ArmorBarrier"],
+            MySkillConfig["FireBall"](),
+            MySkillConfig["SnowStorm"](),
+            MySkillConfig["ArmorBarrier"](),
         };
         CharacterData characterData = new CharacterData("MyCharacter");
 
@@ -39,7 +40,7 @@ public class GameEntry : MonoBehaviour
         CharacterData AICharacterData = new CharacterData("MyAICharacter");
         var myAICharacter = ResManager.Instance.CreateCharacter(AICharacterData, "Assets/Resources/Player/Animators/AIMage.controller");
         myAICharacter.SetData(AICharacterData);
-        myAICharacter.LearnSkill(new SkillData(1, "Fireball", "Effect/FireBall", 3, 100, 5, RangeType.Point));
+        myAICharacter.LearnSkill(MySkillConfig["FireBall"]());
         ResManager.Instance.BuildHUD(myAICharacter, myAICharacter.CharacterData.health);
         myAICharacter.gameObject.AddComponent<AIController>();
 

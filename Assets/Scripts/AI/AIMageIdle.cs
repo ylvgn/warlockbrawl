@@ -16,8 +16,10 @@ public class AIMageIdle : StateMachineBehaviour
     // OnStateEnter is called when a transition starts and the state machine starts to evaluate this state
     override public void OnStateEnter(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
     {
+        animator.SetBool("CanWalk", false);
+        animator.SetBool("FindEnemy", false);
         AIController = animator.gameObject.GetComponent<AIController>();
-        // AnimationClip animationClip = animator.runtimeAnimatorController.animationClips.Where(clip => clip.name == "Idle").FirstOrDefault();
+        // AnimationClip animationClip = animator.runtimeAnimatorController.animationClips.Where(clip => clip.name == "Idle").FirstOrDefault(); // using Linq
         // AnimationClip a = animator.GetCurrentAnimatorClipInfo(0)[0].clip;
         animationClip = animator.runtimeAnimatorController.animationClips[0];
         if (animationClip) {
@@ -37,19 +39,20 @@ public class AIMageIdle : StateMachineBehaviour
             curFrame = curFrame % totalFrame;
             if (curFrame % 10 == 0) { // 每10帧判断一次
                 int t = Random.Range(0, 1000);
-                if (t % 5 == 0) {
-                    animator.SetBool("CanWalk", true);
-                }
+                animator.SetBool("CanWalk", t % 5 == 0);
+                animator.SetBool("FindEnemy", t % 6 == 0);
             }
         }
     }
 
     override public void OnStateExit(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
-    {   
+    {
         // 结束时候判断1次
-        if (animationClip){
+        if (animationClip)
+        {
             int t = Random.Range(0, 1000);
             animator.SetBool("CanWalk", t % 10 == 0);
+            animator.SetBool("FindEnemy", t % 3 == 0);
         }
     }
 }

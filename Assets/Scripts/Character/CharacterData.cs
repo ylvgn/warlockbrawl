@@ -45,7 +45,7 @@ public class CharacterData
 #endregion
 
     private Dictionary<int, SkillData> skillIdToSkillDataDict;
-    private Dictionary<int, BuffData> buffIdToBuffDataDict;
+    private Dictionary<BuffType, BuffData> buffTypeToBuffDataDict;
 
     public CharacterData() {}
     public CharacterData(string name_)
@@ -53,7 +53,7 @@ public class CharacterData
         name = name_;
         health = new HealthData(100, 100);
         skillIdToSkillDataDict = new Dictionary<int, SkillData>();
-        buffIdToBuffDataDict = new Dictionary<int, BuffData>();
+        buffTypeToBuffDataDict = new Dictionary<BuffType, BuffData>();
     }
 
 #region skill
@@ -79,11 +79,10 @@ public class CharacterData
 #endregion
 
 #region buff
-    public BuffData GetBuffData(int buffId)
+    public BuffData GetBuffData(BuffType buffType)
     {
         BuffData res;
-        if (buffIdToBuffDataDict.TryGetValue(buffId, out res))
-            return res;
+        if (buffTypeToBuffDataDict.TryGetValue(buffType, out res)) return res;
         return null;
     }
 
@@ -98,64 +97,72 @@ public class CharacterData
         for (int i = 0; i < buffDataList.Count; i++)
         {
             var addBuffData = buffDataList[i];
-            int buffId = addBuffData.id;
-            var buffData = GetBuffData(buffId);
-            if (buffData == null) {
-                buffIdToBuffDataDict.Add(buffId, addBuffData);
-            } else if (buffData.canOverlay) {
+            var buffType = addBuffData.type;
+            var buffData = GetBuffData(buffType);
+            if (buffData == null)
+            {
+                buffTypeToBuffDataDict.Add(buffType, addBuffData);
+            } else if (buffData.canOverlay)
+            {
                 buffData.OverlayBuff(buffData);
             }
         }
     }
 
-    public void RemoveBuffs(List<int> buffIdList)
+    public void TakeOffBuff(BuffType buffType)
     {
-        if (buffIdList == null)
-        {
-            Debug.LogError("[CharacterData] RemoveBuffs 传入buffIdList == null");
-            return;
-        }
-        for (int i = 0; i < buffIdList.Count; i ++)
-        {
-            int buffId = buffIdList[i];
-            BuffData buffData = GetBuffData(buffId);
-            if (buffData != null)
-                buffIdToBuffDataDict.Remove(buffId);
-        }
-    }
-
-    public void TakeOffBuff(int buffId)
-    {
-        BuffData buffData = GetBuffData(buffId);
+        BuffData buffData = GetBuffData(buffType);
         if (buffData != null)
             buffData.KillSelf();
     }
 
     public void TakeOffAllBuffs()
     {
-        foreach (var item in buffIdToBuffDataDict)
+        foreach (var item in buffTypeToBuffDataDict)
+        {
             TakeOffBuff(item.Key);
+        }
     }
 
     public void HandleAllBuffs()
     {
-        if (buffIdToBuffDataDict.Count == 0) return;
-
-        List<int> removeBuffList = new List<int>();
-        foreach (var item in buffIdToBuffDataDict)
+        if (buffTypeToBuffDataDict.Count == 0) return;
+        List<BuffType> removeBuffList = new List<BuffType>();
+        foreach (var item in buffTypeToBuffDataDict)
         {
-            int buffId = item.Key;
+            var buffType = item.Key;
             var buffData = item.Value;
             if (buffData.IsObsolete())
             {
                 buffData.KillSelf();
-                removeBuffList.Add(buffId);
+                removeBuffList.Add(buffType);
                 continue;
             }
-            if (buffData.CanHandle())
+            if (buffData.CanHandle() && buffData.BuffMode == BuffMode.PerSingleSecond)
                 buffData.Handle();
         }
-        RemoveBuffs(removeBuffList);
+        RemoveBuffsInner(removeBuffList);
     }
-#endregion
+
+    void RemoveBuffsInner(List<BuffType> buffIdList)
+    {
+        if (buffIdList == null)
+        {
+            Debug.LogError("[CharacterData] RemoveBuffs 传入buffIdList == null");
+            return;
+        }
+        for (int i = 0; i < buffIdList.Count; i++)
+        {
+            var buffType = buffIdList[i];
+            BuffData buffData = GetBuffData(buffType);
+            if (buffData != null)
+                buffTypeToBuffDataDict.Remove(buffType);
+        }
+    }
+    #endregion
+
+    public override string ToString()
+    {
+        return $"name:{name} skillCount:{skillIdToSkillDataDict.Count} buffCount:{buffTypeToBuffDataDict.Count}";
+    }
 }

@@ -11,7 +11,7 @@ public class FireBall : SkillProject
             return;
         }
 
-        Vector3 dir = getDir();
+        Vector3 dir = data.GetDir();
         float offsetY = Owner.characterController.height;
         var startPos = Owner.transform.position + new Vector3(0, offsetY / 2, 0) + dir;
         transform.position = startPos;
@@ -23,7 +23,7 @@ public class FireBall : SkillProject
     void Update()
     {
         if (!isEnable) return;
-        var skillData = getSkillData();
+        var skillData = GetSkillData();
         transform.Translate(Vector3.forward * skillData.flySpeed * Time.deltaTime);
         if (Vector3.Distance(transform.position, StartPos) > skillData.maxRange) {
             isEnable = false;
@@ -31,14 +31,15 @@ public class FireBall : SkillProject
         }
     }
     
-    public override void OnCollisionEnter(Collision collision) {
+    public override void OnCollisionEnter(Collision collision)
+    {
         if (!isEnable) return;
         base.OnCollisionEnter(collision);
     }
 
     public override DamgeData GetDamage(IAttackable other)
     {
-        var skillData = getSkillData();
+        var skillData = GetSkillData();
         var enemy = other as Character;
         if (enemy) return new DamgeData(Owner.CharacterData, skillData, enemy.CharacterData);
         var obstacle = other as MyObstacle;
