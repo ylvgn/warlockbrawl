@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEditor;
 
 public class StatsManager : MonoBehaviour
 {
@@ -21,5 +22,28 @@ public class StatsManager : MonoBehaviour
     public void AddCharacter(Character character)
     {
         CharacterList.Add(character);
+    }
+
+    void OnGUI()
+    {
+        if (Selection.activeGameObject != gameObject) return;
+        if (!_instance) return;
+        if (CharacterList.Count == 0) return;
+        float groupWidth = 200f;
+        float posY = 0, height = 30, spacingY = 30;
+        int n = CharacterList.Count;
+        GUI.BeginGroup(new Rect(Screen.width - groupWidth, 0, groupWidth, Screen.height));
+        GUI.Box(new Rect(0, 0, groupWidth, height * n + 30), $"StatsManager:{n}");
+        posY += 30;
+        foreach (var item in CharacterList)
+        {
+            if (GUI.Button(new Rect(0, posY, groupWidth, height), item.name))
+            {
+                Selection.activeGameObject = item.gameObject;
+                EditorGUIUtility.PingObject(Selection.activeGameObject);
+            }
+            posY += spacingY;
+        }
+        GUI.EndGroup();
     }
 }

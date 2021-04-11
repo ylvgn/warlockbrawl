@@ -223,7 +223,7 @@ public class Character : MonoBehaviour, IAttackable
         #endregion
     }
 
-    private void OnDrawGizmos()
+    void OnDrawGizmos()
     {
         var oldColor = Gizmos.color;
         if (currentSkill == null) return;

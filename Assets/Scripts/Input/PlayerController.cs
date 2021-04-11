@@ -5,27 +5,24 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
+    public bool isEnable;
     public Character character;
     public UISkillIndicator indicatorController;
-    private HUD HUD;
-    public bool isEnable;
+    public bool canClickMouse; // 处理UI无法阻挡Raycast问题
 
     public static PlayerController Instance => _instance;
     static PlayerController _instance = null;
 
-    public bool canClickMouse; // 处理UI无法阻挡Raycast问题
-
     void Start()
     {
         if (_instance != null) {
-            GameObject.Destroy(_instance); 
             Debug.LogError("重复实例化 PlayerController.instance");
+            GameObject.Destroy(_instance); 
         }
         _instance = this;
 
         character = MyUtility.GetComponent<Character>(transform);
         indicatorController = MyUtility.GetComponentInChildren<UISkillIndicator>(transform);
-        HUD = MyUtility.GetComponentInChildren<HUD>(transform);
         canClickMouse = false;
         isEnable = true;
     }
@@ -80,6 +77,6 @@ public class PlayerController : MonoBehaviour
             Vector3 input = new Vector3(Input.GetAxisRaw("Horizontal"), 0, Input.GetAxisRaw("Vertical"));
             if (input == Vector3.zero) return;
             character.JoyStick(input);
-        }        
+        }
     }
 }

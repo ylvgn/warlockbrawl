@@ -5,7 +5,7 @@ using UnityEngine;
 public class MyGameManager : MonoBehaviour
 {
     public FloorController floorController;
-    
+
     void Start()
     {
         floorController.Init();

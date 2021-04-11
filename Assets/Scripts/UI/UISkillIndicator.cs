@@ -24,6 +24,7 @@ public class UISkillIndicator : MonoBehaviour
 
     public void SetData(SkillData skillData)
     {
+        CancleSkill();
         curSkillData = skillData;
         Sprite sprite = null;
         var RangeType = skillData.RangeType;
@@ -71,7 +72,6 @@ public class UISkillIndicator : MonoBehaviour
             default:
                 break;
         }
-
         isEnable = true;
     }
 
@@ -115,6 +115,7 @@ public class UISkillIndicator : MonoBehaviour
     public void CancleSkill()
     {
         isEnable = false;
+        curSkillData = null;
         indicatorImg.gameObject.SetActive(false);
         indicatorRangeImg.gameObject.SetActive(false);
     }

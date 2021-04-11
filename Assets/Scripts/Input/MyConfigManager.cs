@@ -6,12 +6,30 @@ using UnityEditor;
 public class MyConfigManager : MonoBehaviour
 {
     private bool isEnable = false;
+    public bool isShowTips = true;
+    Dictionary<string, GameObject> allConfig;
+    [Range(100, 200)]  public float groupWidth = 100;
+    [Range(20, 100)] public float buttonHeight = 20;
+    [Range(0, 10)] public float spacingY = 0;
+    [HideInInspector] public GUIStyle tipsStyle;
+
+    [Header("ALL CONFIG")]
     public FloorController floorController;
+    public StatsManager StatsManager;
+    public ResManager ResManager;
+    public MyGameManager MyGameManager;
 
     void Start()
     {
-        isEnable = true;
+        allConfig = new Dictionary<string, GameObject>()
+        {
+            { "FloorController", floorController.gameObject },
+            { "StateManager", StatsManager.gameObject },
+            { "ResManager", ResManager.gameObject }, // tmp
+        };
+
         Selection.activeGameObject = gameObject;
+        isEnable = true;
     }
 
     void Update()
@@ -28,43 +46,41 @@ public class MyConfigManager : MonoBehaviour
         if (!isEnable) return;
         if (Selection.activeGameObject == gameObject)
         {
-            GUI.BeginGroup (new Rect (Screen.width - 100, 0, 100, 120));
-            float height = 20;
+            if (isShowTips)
+            {
+                GUI.Box(new Rect(100, 0, Screen.width - groupWidth, 30), "Short Cut Key: 'Left Ctrl + F1' ", tipsStyle);
+            }
+            GUI.BeginGroup (new Rect (Screen.width - groupWidth, 0, groupWidth, Screen.height));
+            float height = Mathf.Min(Screen.height / allConfig.Count, buttonHeight);
             float posY = 0;
-            if (GUI.Button(new Rect(0, posY, 100, height), "FloorController"))
+            float spacing = spacingY + height;
+            foreach (var item in allConfig)
             {
-                Selection.activeGameObject = floorController.gameObject;
+                if (GUI.Button(new Rect(0, posY, groupWidth, height), item.Key))
+                {
+                    Selection.activeGameObject = item.Value;
+                    EditorGUIUtility.PingObject(Selection.activeGameObject);
+                }
+                posY += spacing;
             }
-            posY += 20;
-            if (GUI.Button(new Rect(0, posY, 100, height), "FloorController"))
+            GUI.EndGroup();
+            if (GUI.Button(new Rect(0, 0, 100, 100), "ReLoad"))
             {
-                Selection.activeGameObject = floorController.gameObject;
+                if (!MyGameManager) return;
+                MyGameManager.ResetStart();
             }
-            posY += 20;
-            if (GUI.Button(new Rect(0, posY, 100, height), "FloorController"))
-            {
-                Selection.activeGameObject = floorController.gameObject;
-            }
-            posY += 20;
-            if (GUI.Button(new Rect(0, posY, 100, height), "FloorController"))
-            {
-                Selection.activeGameObject = floorController.gameObject;
-            }
-            posY += 20;
-            if (GUI.Button(new Rect(0, posY, 100, height), "FloorController"))
-            {
-                Selection.activeGameObject = floorController.gameObject;
-            }
-            posY += 20;
-            if (GUI.Button(new Rect(0, posY, 100, height), "FloorController"))
-            {
-                Selection.activeGameObject = floorController.gameObject;
-            }
-            GUI.EndGroup ();
-        } else {
+        }
+        else // 在其他config界面
+        {
             if (GUI.Button(new Rect(0, 0, 100, 100), "Back"))
             {
                 Selection.activeGameObject = gameObject;
+                EditorGUIUtility.PingObject(Selection.activeGameObject);
+            }
+            if (GUI.Button(new Rect(0, 100, 100, 100), "ReLoad"))
+            {
+                if (!MyGameManager) return;
+                MyGameManager.ResetStart(); // tmp
             }
         }
     }

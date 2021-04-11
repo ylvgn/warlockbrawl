@@ -62,4 +62,9 @@ public class UISkillPanelItem : MonoBehaviour
         if (SetClickCallBack != null && !isAnim)
             SetClickCallBack(skillId);
     }
+
+    public int GetSkillId()
+    {
+        return skillId;
+    }
 }

@@ -7,6 +7,7 @@ public class ResManager : MonoBehaviour
 {
     public GameObject UIIndicatorPrefab;
     public GameObject UIHUDPrefab;
+    public Transform[] CharacterBuildPoints;
 
     public static ResManager Instance => _instance;
     static ResManager _instance = null;
@@ -23,7 +24,13 @@ public class ResManager : MonoBehaviour
     public Character CreateCharacter(CharacterData characterData, string controllerPath)
     {
         var playerPrefabs = Resources.Load<GameObject>("Player/Mage");
-        GameObject playerObj = GameObject.Instantiate<GameObject>(playerPrefabs, Vector3.zero, Quaternion.identity);
+        Vector3 pos = Vector3.zero;
+        if (CharacterBuildPoints!= null)
+        {
+            int t = Random.Range(0, 1000 + (int)Time.time);
+            pos = CharacterBuildPoints[t % CharacterBuildPoints.Length].position;
+        }
+        GameObject playerObj = GameObject.Instantiate<GameObject>(playerPrefabs, pos, Quaternion.identity);
         var character = playerObj.GetComponent<Character>();
         var animator = playerObj.GetComponent<Animator>();
         var controller = AssetDatabase.LoadMainAssetAtPath(controllerPath) as UnityEditor.Animations.AnimatorController;
