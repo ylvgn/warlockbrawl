@@ -14,7 +14,6 @@ public enum WuXing
 public enum CharacterState
 {
     Idle,
-    Moving,
     OnAttack,
     OnAttackNoMove,
     Spelling,
@@ -51,7 +50,7 @@ public class CharacterData
     public CharacterData(string name_)
     {
         name = name_;
-        health = new HealthData(100, 100);
+        health = new HealthData(new MyRangeInt(100, 0), new MyRangeInt(100, 0));
         skillIdToSkillDataDict = new Dictionary<int, SkillData>();
         buffTypeToBuffDataDict = new Dictionary<BuffType, BuffData>();
     }

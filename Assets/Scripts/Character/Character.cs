@@ -11,9 +11,11 @@ public class Character : MonoBehaviour, IAttackable
     [SerializeField] private CharacterData characterData = null;
     private Dictionary<int, float> coolingDownSkillStartTimeDict;
     private float spellingstartTime;
-    private SkillBehaviourData currentSkill; // tmp
+    private SkillProjectData currentSkill;
+    public ScriptableObject CharacterHealth;
+    public bool isMoving = false;
 
-#region buff
+    #region buff
     private List<BuffData> waitingAddBuffList;
 #endregion
     
@@ -46,8 +48,8 @@ public class Character : MonoBehaviour, IAttackable
     {
         if (!CanMove()) return;
         if (IsSpelling()) StopSpelling();
-        if (agent.destination == endPos && characterData.CharacterState == CharacterState.Moving) return;
-        characterData.CharacterState = CharacterState.Moving;
+        if (agent.destination == endPos && isMoving) return;
+
         agent.isStopped = false;
         agent.SetDestination(endPos);
         TowardDir(endPos - transform.position);
@@ -126,7 +128,7 @@ public class Character : MonoBehaviour, IAttackable
             IssueMountBuffSkill(skillBehaviourData as SkillMountBuffData, prefab);
         } else
         {
-            IssueProjectSkill(skillBehaviourData as SkillProjectData, prefab);
+            IssueProjectileSkill(skillBehaviourData as SkillProjectData, prefab);
         }
     }
 
@@ -136,8 +138,7 @@ public class Character : MonoBehaviour, IAttackable
         mountBuff.Init(skillMountBuffData);
     }
 
-    // 弹道
-    void IssueProjectSkill(SkillProjectData skillProjectData, GameObject prefab)
+    void IssueProjectileSkill(SkillProjectData skillProjectData, GameObject prefab)
     {
         var skillData = skillProjectData.skillData;
         currentSkill = skillProjectData;
@@ -315,12 +316,12 @@ public class Character : MonoBehaviour, IAttackable
 
     public int GetHP()
     {
-        return characterData.health.HP;
+        return characterData.health.HP.value;
     }
 
     public int GetMP()
     {
-        return characterData.health.MP;
+        return characterData.health.MP.value;
     }
 
     void StopSpelling(CharacterState state = CharacterState.Idle)

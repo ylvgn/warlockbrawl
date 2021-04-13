@@ -1,23 +1,44 @@
-﻿[System.Serializable]
+﻿using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+[System.Serializable]
 public class HealthData
 {
-    public int HP;
-    public int MP;
-    public int maxHP;
-    public int maxMP;
+    [SerializeField] public MyRangeInt HP;
+    [SerializeField] public MyRangeInt MP;
 
-    public HealthData(int maxHP_, int maxMP_ = 0) {
-        maxHP = maxHP_;
-        maxMP = maxMP_;
-        SetHP(maxHP);
-        SetHP(maxMP);
+    public HealthData(MyRangeInt HP_, MyRangeInt MP_)
+    {
+        HP = HP_;
+        MP = MP_;
+    }
+
+    public void AddDeltaHP(int delta)
+    {
+        HP.AddValue(delta);
+    }
+
+    public void AddDeltaMP(int delta)
+    {
+        MP.AddValue(delta);
     }
 
     public void SetHP(int HP_) {
-        HP = System.Math.Max(HP_, 0);
+        HP.SetValue(HP_);
     }
 
     public void SetMP(int MP_) {
-        MP = System.Math.Max(MP_, 0);
+        MP.SetValue(MP_);
+    }
+
+    public int GetMaxHP()
+    {
+        return HP.max;
+    }
+
+    public int GetMaxMP()
+    {
+        return MP.max;
     }
 }

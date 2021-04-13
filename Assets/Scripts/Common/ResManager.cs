@@ -48,7 +48,7 @@ public class ResManager : MonoBehaviour
         res = obj.GetComponent<HUD>();
         var HUDRect = obj.GetComponent<RectTransform>();
         HUDRect.localPosition = new Vector3(0, playerHeight, 0);
-        if (res != null) res.Init(healthData.maxHP);
+        if (res != null) res.Init(healthData);
         return res;
     }
 
@@ -61,7 +61,7 @@ public class ResManager : MonoBehaviour
         float height = obj.GetComponent<Collider>().bounds.size.y;
         HUDRect.localScale = new Vector3(1.0f / localScale.x, 1.0f / localScale.y, 1.0f / localScale.z);
         HUDRect.localPosition = new Vector3(0, (height / 2 * HUDRect.localScale.y) + HUDRect.localScale.y, 0);
-        if (res != null) res.Init(healthData.maxHP);
+        if (res != null) res.Init(healthData);
         return res;
     }
 

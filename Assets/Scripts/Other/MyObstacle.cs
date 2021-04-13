@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class MyObstacle : MonoBehaviour, IAttackable
 {
-    public HealthData health;
+    [SerializeField] public HealthData health;
 
     void Start()
     {
@@ -12,10 +12,10 @@ public class MyObstacle : MonoBehaviour, IAttackable
     }
 
     public void TakeDamage(int damge) {
-        health.SetHP(health.HP - damge);
+        health.AddDeltaHP(-damge);
     }
 
     public int GetHP() {
-        return health.HP;
+        return health.HP.value;
     }
 }

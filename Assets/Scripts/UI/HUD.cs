@@ -5,11 +5,9 @@ using UnityEngine.UI;
 
 public class HUD : MonoBehaviour
 {
-    [SerializeField] private int healthMax;
-    [SerializeField] private int healthValue;
+    [SerializeField] private HealthData healthData;
     private bool isAnim;
     private float maxWidth;
-    private Image healthImg;
     private RectTransform healthImgRect;
     public AnimationCurve animationCurve;
     private IAttackable owner;
@@ -18,27 +16,26 @@ public class HUD : MonoBehaviour
     {
         owner = MyUtility.GetComponentInParent<IAttackable>(transform);
         healthImgRect = MyUtility.GetComponent<RectTransform>(transform, "bg/health");
-        healthImg = MyUtility.GetComponent<Image>(transform, "bg/health");
         animationCurve.AddKey(0, 0);
         animationCurve.AddKey(1, 1);
         animationCurve.preWrapMode = WrapMode.Default;
         maxWidth = healthImgRect.sizeDelta.x;
     }
 
-    public void Init(int healthMax)
+    public void Init(HealthData healthData_)
     {
-        this.healthMax = healthMax;
-        this.SetData(healthMax);
+        healthData = healthData_;
+        SetData(healthData.HP.max);
     }
 
     void Update()
     {
-        if (owner != null && healthMax > 0)
+        if (owner == null) return;
+        int maxHP = healthData.GetMaxHP();
+        if (maxHP <= 0) return;
+        if (owner.GetHP() != maxHP)
         {
-            if (owner.GetHP() != healthValue)
-            {
-                SetData(owner.GetHP());
-            }
+            SetData(owner.GetHP());
         }
     }
 
@@ -47,9 +44,10 @@ public class HUD : MonoBehaviour
         transform.rotation = Quaternion.Euler(Camera.main.transform.forward);
     }
 
-    public void SetData(int healthValue_)
+    public void SetData(int hp)
     {
-        if (healthMax == 0) {
+        int maxHP = healthData.GetMaxHP();
+        if (maxHP == 0) {
             Debug.LogError("healthMax 未赋值");
             return;
         }
@@ -57,16 +55,17 @@ public class HUD : MonoBehaviour
         if (isAnim) return;
         isAnim = true;
 
-        if (healthValue_ <= 0) {
-            healthValue_ = 0;
+        if (hp <= 0) {
+            hp = 0;
         }
 
-        StartCoroutine(UITween(healthValue_));
+        StartCoroutine(UITween(hp));
     }
 
     IEnumerator UITween(int endValue)
     {
-        float imgWidth = maxWidth * endValue / healthMax;
+        int maxHP = healthData.GetMaxHP();
+        float imgWidth = maxWidth * endValue / maxHP;
         Vector2 toSizeDelta = new Vector2(imgWidth, healthImgRect.sizeDelta.y);
         float startTime = Time.realtimeSinceStartup;
         float endTime = Time.realtimeSinceStartup + 1;
@@ -77,6 +76,6 @@ public class HUD : MonoBehaviour
             yield return new WaitForSeconds(0.02f);
         }
         isAnim = false;
-        healthValue = endValue;
+        healthData.SetHP(endValue);
     }
 }
