@@ -1,7 +1,9 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+#if UNITY_EDITOR
 using UnityEditor;
+#endif
 
 public class MyConfigManager : MonoBehaviour
 {
@@ -16,7 +18,6 @@ public class MyConfigManager : MonoBehaviour
     [Header("ALL CONFIG")]
     public FloorController floorController;
     public StatsManager StatsManager;
-    public ResManager ResManager;
     public MyGameManager MyGameManager;
 
     void Start()
@@ -25,13 +26,13 @@ public class MyConfigManager : MonoBehaviour
         {
             { "FloorController", floorController.gameObject },
             { "StateManager", StatsManager.gameObject },
-            { "ResManager", ResManager.gameObject }, // tmp
         };
 
         Selection.activeGameObject = gameObject;
         isEnable = true;
     }
 
+#if UNITY_EDITOR
     void Update()
     {
         if (Input.GetKey(KeyCode.LeftControl) && Input.GetKeyDown(KeyCode.F1))
@@ -84,4 +85,5 @@ public class MyConfigManager : MonoBehaviour
             }
         }
     }
+#endif
 }

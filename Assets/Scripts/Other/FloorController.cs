@@ -111,6 +111,7 @@ public class FloorController : MonoBehaviour
         return new DropHPBuffData(owner, 100, 3, 5);
     }
 
+#if UNITY_EDITOR
     void OnGUI()
     {
         if (UnityEditor.Selection.activeGameObject != gameObject) return;
@@ -132,4 +133,5 @@ public class FloorController : MonoBehaviour
         intervalAddBuffTime = GUI.HorizontalSlider(new Rect(0, posY, groupWidth, height), intervalAddBuffTime, 0.1f, 10f);
         GUI.EndGroup();
     }
+#endif
 }

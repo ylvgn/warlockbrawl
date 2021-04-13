@@ -23,7 +23,7 @@ public class StatsManager : MonoBehaviour
     {
         CharacterList.Add(character);
     }
-
+#if UNITY_EDITOR
     void OnGUI()
     {
         if (Selection.activeGameObject != gameObject) return;
@@ -46,4 +46,5 @@ public class StatsManager : MonoBehaviour
         }
         GUI.EndGroup();
     }
+#endif
 }

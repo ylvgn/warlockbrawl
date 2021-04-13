@@ -115,9 +115,9 @@ public class UISkillPanel : MonoBehaviour
         }
     }
 
+#if UNITY_EDITOR
     int MyEditingSkillId = 0;
     string newKeyCodeStr;
-
     private void OnGUI()
     {
         if (PlayerController.Instance == null) return;
@@ -184,5 +184,5 @@ public class UISkillPanel : MonoBehaviour
             }
         }
     }
-
+#endif
 }
