@@ -10,8 +10,9 @@ public class UISkillPanel : MonoBehaviour
     private List<UISkillPanelItem> _skillItemList;
     private Dictionary<int, int> _skillIdToItemIndex;
 
-    [Header("Config")]
+#if UNITY_EDITOR
     public KeyCode[] MyShortCutKeyCodes = new KeyCode[SkillSlotCount];
+#endif
 
     void Awake()
     {
@@ -67,6 +68,14 @@ public class UISkillPanel : MonoBehaviour
         PlayerController.Instance.indicatorController.SetData(skillData);
     }
 
+    public int IndexToSkillId(int index)
+    {
+        if (index >= SkillSlotCount) return 0;
+        var item = _skillItemList[index];
+        return item.GetSkillId();
+    }
+
+#if UNITY_EDITOR
     public void SetShortCutKetCode(int index, KeyCode keyCode)
     {
         if (PlayerController.Instance == null || PlayerController.Instance.character == null)
@@ -76,7 +85,7 @@ public class UISkillPanel : MonoBehaviour
         }
 
         var character = PlayerController.Instance.character;
-        for (int i = 0; i < SkillSlotCount; i ++)
+        for (int i = 0; i < SkillSlotCount; i++)
         {
             var skillId = IndexToSkillId(i);
             if (skillId == 0) continue;
@@ -91,13 +100,6 @@ public class UISkillPanel : MonoBehaviour
         MyShortCutKeyCodes[index] = keyCode;
         var NewKeyCodeSkillData = character.CharacterData.GetSkillData(IndexToSkillId(index));
         MyUtility.MyDebug("{0} Set KeyCode '{1}' Suc!", NewKeyCodeSkillData.name, keyCode);
-    }
-
-    public int IndexToSkillId(int index)
-    {
-        if (index >= SkillSlotCount) return 0;
-        var item = _skillItemList[index];
-        return item.GetSkillId();
     }
 
     void Update()
@@ -115,7 +117,6 @@ public class UISkillPanel : MonoBehaviour
         }
     }
 
-#if UNITY_EDITOR
     int MyEditingSkillId = 0;
     string newKeyCodeStr;
     private void OnGUI()
