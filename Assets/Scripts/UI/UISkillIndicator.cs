@@ -19,12 +19,12 @@ public class UISkillIndicator : MonoBehaviour
         spriteAssetsDict = new Dictionary<int, Sprite>();
         indicatorImg = MyUtility.GetComponent<Image>(transform, "indicator");
         indicatorRangeImg = MyUtility.GetComponent<Image>(transform, "indicatorRange");
-        CancleSkill();
+        CancelSkill();
     }
 
     public void SetData(SkillData skillData)
     {
-        CancleSkill();
+        CancelSkill();
         curSkillData = skillData;
         Sprite sprite = null;
         var RangeType = skillData.RangeType;
@@ -103,7 +103,7 @@ public class UISkillIndicator : MonoBehaviour
                 var rotation = Quaternion.LookRotation(dir);
                 var angle = rotation.eulerAngles;
                 indicatorImg.transform.rotation = Quaternion.Euler(90, angle.y, 0);
-                indicatorImg.transform.position = player.position + (dir * skillRange / 2.0f); // tmp 有问题 ..
+                indicatorImg.transform.position = player.position + (dir * skillRange / 2.0f);
                 Debug.DrawLine(player.position, hit.point, Color.red);
                 break;
             default:
@@ -112,7 +112,7 @@ public class UISkillIndicator : MonoBehaviour
     }
 
     // 取消技能
-    public void CancleSkill()
+    public void CancelSkill()
     {
         isEnable = false;
         curSkillData = null;

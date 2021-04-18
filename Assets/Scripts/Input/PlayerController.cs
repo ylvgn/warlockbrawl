@@ -5,7 +5,7 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
-    public bool isEnable;
+    private bool isEnable;
     public Character character;
     public UISkillIndicator indicatorController;
     public bool canClickMouse; // 处理UI无法阻挡Raycast问题
@@ -20,9 +20,10 @@ public class PlayerController : MonoBehaviour
             GameObject.Destroy(_instance); 
         }
         _instance = this;
-
         character = MyUtility.GetComponent<Character>(transform);
+        var healthData = new HealthData(character.CharacterData.health.HP, character.CharacterData.health.MP);
         indicatorController = MyUtility.GetComponentInChildren<UISkillIndicator>(transform);
+        ResManager.Instance.BuildHUD(character, healthData);
         canClickMouse = false;
         isEnable = true;
     }
@@ -31,11 +32,10 @@ public class PlayerController : MonoBehaviour
     {
         if (!isEnable) return;
         if (character.IsDead()) {
-            indicatorController.CancleSkill();
+            indicatorController.CancelSkill();
             isEnable = false;
             return;
         }
-
         RaycastHit hit;
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
 
@@ -61,7 +61,7 @@ public class PlayerController : MonoBehaviour
                     var skillData = indicatorController.GetCurrentSkillData();
                     SkillProjectData skillProjectData = new SkillProjectData(character, skillData, hit.point);
                     character.IssueSkill(skillProjectData);
-                    indicatorController.CancleSkill();
+                    indicatorController.CancelSkill();
                 }
             }
         }
@@ -69,7 +69,7 @@ public class PlayerController : MonoBehaviour
         // 取消技能
         if (Input.GetKeyDown(KeyCode.Escape))
         {
-            indicatorController.CancleSkill();
+            indicatorController.CancelSkill();
         }
 
         if (Application.isEditor && character != null)

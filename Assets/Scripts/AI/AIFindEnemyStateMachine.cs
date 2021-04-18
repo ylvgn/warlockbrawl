@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class AIMageFindEnemy : StateMachineBehaviour
+public class AIFindEnemyStateMachine : StateMachineBehaviour
 {
     AIController AIController;
     Character enemy;

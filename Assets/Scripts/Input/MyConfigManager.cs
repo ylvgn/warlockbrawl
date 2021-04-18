@@ -13,7 +13,7 @@ public class MyConfigManager : MonoBehaviour
     [Range(100, 200)]  public float groupWidth = 100;
     [Range(20, 100)] public float buttonHeight = 20;
     [Range(0, 10)] public float spacingY = 0;
-    [HideInInspector] public GUIStyle tipsStyle;
+    public GUIStyle tipsStyle;
 
     [Header("ALL CONFIG")]
     public FloorController floorController;

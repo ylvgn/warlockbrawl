@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class AIMageWalk : StateMachineBehaviour
+public class AIWalkStateMachine : StateMachineBehaviour
 {
     AIController AIController;
     Vector3 dir;
@@ -23,7 +23,7 @@ public class AIMageWalk : StateMachineBehaviour
     override public void OnStateUpdate(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
     {
         if (!isEnable) return;
-        AIController.Walk(dir, distance);
+        AIController.Walk(AIController.transform.position + dir * distance);
         isEnable = false;
     }
 
