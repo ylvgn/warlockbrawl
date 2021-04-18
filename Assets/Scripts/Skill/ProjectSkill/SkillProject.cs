@@ -33,7 +33,7 @@ public abstract class SkillProject : MonoBehaviour, IDamage
     public virtual void OnCollisionEnter(Collision collision) {
         IAttackable something = collision.gameObject.GetComponent<IAttackable>();
         if (something == GetOwner()) return;
-        if (something != null ) {
+        if (something != null) {
             if (something.GetHP() == 0) return;
             var damge = GetDamage(something);
             something.TakeDamage(damge.CalcDamage());

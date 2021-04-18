@@ -8,16 +8,12 @@ public class Character : MonoBehaviour, IAttackable
 {
     public CharacterData CharacterData => characterData;
     [Header("Datas")]
+    public bool isMoving = false;
     [SerializeField] private CharacterData characterData = null;
     private Dictionary<int, float> coolingDownSkillStartTimeDict;
     private float spellingstartTime;
-    private SkillProjectData currentSkill;
-    public ScriptableObject CharacterHealth;
-    public bool isMoving = false;
-
-    #region buff
+    private SkillProjectData currentSpellingSkill;
     private List<BuffData> waitingAddBuffList;
-#endregion
     
     [Header("Components")]
     [HideInInspector] public NavMeshAgent agent;
@@ -30,9 +26,7 @@ public class Character : MonoBehaviour, IAttackable
     void Awake()
     {
         coolingDownSkillStartTimeDict = new Dictionary<int, float>();
-        #region buff
         waitingAddBuffList = new List<BuffData>();
-        #endregion
         agent = GetComponent<NavMeshAgent>();
         anim = GetComponent<Animator>();
         characterController = GetComponent<CharacterController>();
@@ -52,7 +46,9 @@ public class Character : MonoBehaviour, IAttackable
 
         agent.isStopped = false;
         agent.SetDestination(endPos);
-        TowardDir(endPos - transform.position);
+        var dir = endPos - transform.position;
+        if (dir == Vector3.zero) return;
+        TowardDir(dir);
     }
 
     public void StopMove(CharacterState state = CharacterState.Idle)
@@ -115,9 +111,8 @@ public class Character : MonoBehaviour, IAttackable
 
     void HandleSkillBehaviour(SkillBehaviourData skillBehaviourData)
     {
-        StopMove();
         var skillData = skillBehaviourData.skillData;
-        GameObject prefab = Resources.Load<GameObject>(skillData.resPath);
+        GameObject prefab = skillData.resPrefab? skillData.resPrefab : Resources.Load<GameObject>(skillData.resPath);
         if (prefab == null)
         {
             Debug.LogError("找不到Resources资源 path= " + skillData.resPath);
@@ -141,15 +136,7 @@ public class Character : MonoBehaviour, IAttackable
     void IssueProjectileSkill(SkillProjectData skillProjectData, GameObject prefab)
     {
         var skillData = skillProjectData.skillData;
-        currentSkill = skillProjectData;
-
-        if (skillData.IsBallistic()) {
-            characterData.CharacterState = CharacterState.OnAttackNoMove; // tmp 角色attack状态 要由skillData里定义？blend 动作？
-        } else if (skillData.IsSpelling()) {
-            characterData.CharacterState = CharacterState.Spelling;
-            spellingstartTime = Time.realtimeSinceStartup;
-        }
-        anim.SetTrigger("Attack");
+        currentSpellingSkill = skillProjectData;
         onAttackEvent = null;
         onAttackEvent += () =>
         {
@@ -157,6 +144,14 @@ public class Character : MonoBehaviour, IAttackable
             skillProject.Init(skillProjectData);
         };
         TowardDir(skillProjectData.GetDir());
+        if (skillData.IsBallistic()) {
+            anim.SetTrigger("Attack");
+        }
+        else if (skillData.IsSpelling()) {
+            spellingstartTime = Time.realtimeSinceStartup;
+            characterData.CharacterState = CharacterState.Spelling;
+            anim.SetBool("Spelling", true);
+        }
     }
 
     void Update()
@@ -166,9 +161,9 @@ public class Character : MonoBehaviour, IAttackable
 
         #region move
         // 角色移动
-        if (!agent.isStopped) {
-            float distance = Vector3.Distance(agent.destination, transform.position);
-            if (Mathf.Approximately(distance, 0f)) {
+        if (!agent.isStopped && CanMove()) {
+            float sqrDistance = (agent.destination - transform.position).sqrMagnitude; // sqrMagnitude has better performance than Distance because or sqrt
+            if (Mathf.Approximately(sqrDistance, 0f)) {
                 StopMove();
             } else {
                 float speed = agent.velocity.magnitude / agent.speed;
@@ -181,7 +176,7 @@ public class Character : MonoBehaviour, IAttackable
         // skill cool downing
         if (coolingDownSkillStartTimeDict.Count > 0)
         {
-            List<int> removeList = new List<int>();
+            List<int> removeList = null;
             foreach (var item in coolingDownSkillStartTimeDict)
             {
                 var skillData = characterData.GetSkillData(item.Key);
@@ -189,20 +184,26 @@ public class Character : MonoBehaviour, IAttackable
                 if (Time.realtimeSinceStartup >= endTime && skillData.isCoolDowning)
                 {
                     skillData.isCoolDowning = false;
+                    if (removeList == null) removeList = new List<int>(16);
                     removeList.Add(item.Key);
                 }
             }
-
-            for (int i = 0; i < removeList.Count; i++)
+            if (removeList != null)
             {
-                coolingDownSkillStartTimeDict.Remove(removeList[i]);
+                for (int i = 0; i < removeList.Count; i++)
+                    coolingDownSkillStartTimeDict.Remove(removeList[i]);
             }
         }
 
         // spelling skill
         if (IsSpelling())
         {
-            var skillData = currentSkill.skillData;
+            if (onAttackEvent != null)
+            {
+                onAttackEvent();
+                onAttackEvent = null;
+            }
+            var skillData = currentSpellingSkill.skillData;
             bool isEnd = Time.realtimeSinceStartup - spellingstartTime >= skillData.durationTime;
             if (isEnd)
             {
@@ -226,16 +227,14 @@ public class Character : MonoBehaviour, IAttackable
 
     void OnDrawGizmos()
     {
-        var oldColor = Gizmos.color;
-        if (currentSkill == null) return;
-        var skillData = currentSkill.skillData;
+        if (currentSpellingSkill == null) return;
+        var skillData = currentSpellingSkill.skillData;
         if (IsSpelling())
         {
-            var skillProjectData = currentSkill as SkillProjectData; // tmp
+            var skillProjectData = currentSpellingSkill;
             Gizmos.color = Color.yellow;
             Gizmos.DrawSphere(skillProjectData.endPos, skillData.maxRadius);
         }
-        Gizmos.color = oldColor;
     }
 
     public void JoyStick(Vector3 dir)
@@ -277,7 +276,7 @@ public class Character : MonoBehaviour, IAttackable
         {
             characterData.CharacterState = CharacterState.Dead;
             StopMove();
-            currentSkill = null;
+            currentSpellingSkill = null;
             characterData.TakeOffAllBuffs();
             MyUtility.MyDebug("<color=#00FF00> === [{0}] is dead === </color>", characterData.name);
         }
@@ -292,8 +291,7 @@ public class Character : MonoBehaviour, IAttackable
 
     public bool CanMove()
     {
-        if (IsDead() || characterData.CharacterState == CharacterState.OnAttackNoMove) return false;
-        return true;
+        return !IsDead() && characterData.canMove;
     }
 
     public bool IsDead()
@@ -308,9 +306,7 @@ public class Character : MonoBehaviour, IAttackable
 
     public bool CanIssueSkill()
     {
-        if (IsDead()
-            || characterData.CharacterState == CharacterState.OnAttack
-            || characterData.CharacterState == CharacterState.OnAttackNoMove) return false;
+        if (IsDead() || characterData.CharacterState == CharacterState.OnAttack) return false;
         return true;
     }
 
@@ -327,9 +323,10 @@ public class Character : MonoBehaviour, IAttackable
     void StopSpelling(CharacterState state = CharacterState.Idle)
     {
         if (!IsSpelling()) return;
+        anim.SetBool("Spelling", false);
         characterData.CharacterState = state;
         onAttackEvent = null;
-        currentSkill = null;
+        currentSpellingSkill = null;
         MyUtility.MyDebug("({0})StopSpelling ===", characterData.name);
     }
 
@@ -343,17 +340,11 @@ public class Character : MonoBehaviour, IAttackable
     // 在animator内调用
     void EndAttack()
     {
-        if (IsSpelling()) return; // tmp
         if (!IsDead())
         {
+            characterData.canMove = true;
             characterData.CharacterState = CharacterState.Idle;
             onAttackEvent = null;
         }
-    }
-
-    // temp
-    public void LearnSkill(SkillData skillData)
-    {
-        characterData.LearnSkill(skillData);
     }
 }

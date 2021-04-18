@@ -10,11 +10,8 @@ public class AIController : MonoBehaviour
     void Start()
     {
         character = MyUtility.GetComponent<Character>(transform);
-    }
-
-    public void Walk(Vector3 dir, float distance)
-    {
-        Walk(dir * distance);
+        var healthData = new HealthData(character.CharacterData.health.HP, character.CharacterData.health.MP);
+        ResManager.Instance.BuildHUD(character, healthData);
     }
 
     public void Walk(Vector3 pos)
@@ -26,14 +23,14 @@ public class AIController : MonoBehaviour
     {
         Character res = null;
         var characterList = StatsManager.Instance.CharacterList;
-        float nearestDistance = _DetectEnemyRadius;
+        float nearestDistance = _DetectEnemyRadius * _DetectEnemyRadius;
         foreach (var other in characterList)
         {
             if (other.IsDead() || other == character) continue;
-            float distance = Vector3.Distance(character.transform.position, other.transform.position);
-            if (nearestDistance > distance && distance > 0)
+            float distance2 = (character.transform.position - other.transform.position).sqrMagnitude;
+            if (nearestDistance > distance2 && distance2 > 0)
             {
-                nearestDistance = distance;
+                nearestDistance = distance2;
                 res = other;
             }
         }
@@ -42,7 +39,7 @@ public class AIController : MonoBehaviour
 
     public void Attack(Character enemy)
     {
-        if (enemy == null && enemy.IsDead()) return;
+        if (enemy == null || enemy.IsDead()) return;
         if (character.CanIssueSkill())
             StartCoroutine(WalkCloseAndAttack(enemy));
     }
