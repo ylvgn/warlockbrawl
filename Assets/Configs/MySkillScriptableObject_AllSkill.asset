@@ -1,0 +1,51 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 362e14c946086374eb1ad610722c8010, type: 3}
+  m_Name: MySkillScriptableObject_AllSkill
+  m_EditorClassIdentifier: 
+  Values:
+  - skillId: 1
+    skillName: FireBall
+    flySpeed: 10
+    maxRadius: 1
+    maxRange: 10
+    spellingIntervalTime: 0
+    durationTime: 0
+    coolDownTime: 3
+    RangeType: 4
+    basicDamage: 10
+    resPrefab: {fileID: 6445639790942701244, guid: b7df4086bdc662f45a9a7a243525f07f,
+      type: 3}
+  - skillId: 2
+    skillName: SnowStrom
+    flySpeed: 10
+    maxRadius: 3
+    maxRange: 15
+    spellingIntervalTime: 2
+    durationTime: 10
+    coolDownTime: 5
+    RangeType: 3
+    basicDamage: 10
+    resPrefab: {fileID: 8594905905304476101, guid: 3e2330a757c6b964daefa642fe919bff,
+      type: 3}
+  - skillId: 3
+    skillName: ReboundBarrier
+    flySpeed: 0
+    maxRadius: 0
+    maxRange: 0
+    spellingIntervalTime: 0
+    durationTime: 4
+    coolDownTime: 5
+    RangeType: 0
+    basicDamage: 0
+    resPrefab: {fileID: 5713948258893232685, guid: 2dd855583d0fb14489b8c0701c2c1097,
+      type: 3}

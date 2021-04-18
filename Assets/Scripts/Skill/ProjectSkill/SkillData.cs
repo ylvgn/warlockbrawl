@@ -16,60 +16,41 @@ public class SkillData
     public float coolDownTime;
     public bool isCoolDowning;
     public float flySpeed;
-    public float maxRadius;             // 伤害范围
-    public float maxRange;              // 最大射程
-    public float spellingIntervalTime;  // 施放间隔时间
-    public float durationTime;          // 施放持续时间
-    public RangeType RangeType;         // indicator形式
+    public float maxRadius;                  // 伤害范围
+    public float maxRange;                   // 最大射程
+    public float spellingIntervalTime;       // 施放间隔时间
+    public float durationTime;               // 施放持续时间
+    public RangeType RangeType;              // indicator形式
     public int basicDamage;
-    public string resPath;
+    public bool canCharacterMove;
+    #region Attribute
+    public int fire = 0;
+    public int ice = 0;
+    public int thunder = 0;
+    #endregion
+    public string resPath;                   // tmp
+    public GameObject resPrefab;
 
-#region Attribute
-    // attr
-    public int fire;
-    public int ice;
-    public int thunder;
-#endregion
-
-    public SkillData() {}
-    public SkillData(
-        int id_,
-        string name_,
-        string resPath_,
-        float coolDownTime_,
-        float maxRange_ = 0,
-        float maxRadius_ = 0,
-        float flySpeed_ = 0,
-        RangeType RangeType_ = RangeType.None,
-        float durationTime_ = 0,
-        float spellingIntervalTime_ = 0
-        )
+    public SkillData(MySkillScriptableObject.MySkillScriptableObjectData scriptableObjectData)
     {
-        if (coolDownTime_ <= 0) {
-            Debug.LogError("coolDownTime <= 0!!");
+        basicDamage = scriptableObjectData.basicDamage;
+        coolDownTime = scriptableObjectData.coolDownTime;
+        if (coolDownTime <= 0) {
+            Debug.LogError("coolDownTime <= 0 !!");
         }
-
-        if (resPath_.Trim() == "") {
-            Debug.LogError("未传入资源路径");
-        }
-
-        id = id_;
-        name = name_;
-        coolDownTime = coolDownTime_;
-        maxRange = maxRange_;
-        RangeType = RangeType_;
-        resPath = resPath_;
-        isCoolDowning = false;
-        maxRadius = maxRadius_;
-        durationTime = durationTime_;
-        spellingIntervalTime = spellingIntervalTime_;
-        flySpeed = flySpeed_;
-
-        // ----------- temp
-        basicDamage = 10;        
-        fire = 0;
-        ice = 0;
-        thunder = 0;
+        durationTime = scriptableObjectData.durationTime;
+        flySpeed = scriptableObjectData.flySpeed;
+        maxRadius = scriptableObjectData.maxRadius;
+        RangeType = scriptableObjectData.RangeType;
+        maxRange = scriptableObjectData.maxRange;
+        id = scriptableObjectData.skillId;
+        name = scriptableObjectData.skillName;
+        resPrefab = scriptableObjectData.resPrefab;
+        spellingIntervalTime = scriptableObjectData.spellingIntervalTime;
+        fire = scriptableObjectData.fire;
+        ice = scriptableObjectData.ice;
+        thunder = scriptableObjectData.thunder;
+        canCharacterMove = true;
     }
 
     // 单体

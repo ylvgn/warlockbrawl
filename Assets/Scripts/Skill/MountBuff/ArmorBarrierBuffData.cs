@@ -5,11 +5,7 @@ using UnityEngine;
 public class ArmorBarrierBuffData : BuffData
 {
     private SkillProject otherSkillProject;
-
-    public ArmorBarrierBuffData(Character owner_, float duringTime_) : base(BuffType.ArmorBarrier, owner_, duringTime_)
-    {
-        BuffMode = BuffMode.Static;
-    }
+    public ArmorBarrierBuffData(MyBuffScriptableObject.Buff scriptableObject, IAttackable target_) : base(scriptableObject, target_) {}
 
     public void SetHandleInfo(SkillProject otherSkillProject_)
     {
@@ -18,16 +14,14 @@ public class ArmorBarrierBuffData : BuffData
 
     public override void Handle()
     {
-        if (base.CanHandle())
+        if (!base.CanHandle()) return;
+        if (otherSkillProject == null)
         {
-            if (otherSkillProject == null)
-            {
-                Debug.LogError("[ArmorBarrierBuffData] Handle之前必须先赋值 SetHandleInfo ");
-                return;
-            }
-            var orignalDir = otherSkillProject.GetDir();
-            otherSkillProject.ReSetData(owner as Character, new Vector3(-orignalDir.x, orignalDir.y, -orignalDir.z));
-            KillSelf();
+            Debug.LogError("[ArmorBarrierBuffData] Handle之前必须先赋值 SetHandleInfo ");
+            return;
         }
+        var orignalDir = otherSkillProject.GetDir();
+        otherSkillProject.ReSetData(target as Character, new Vector3(-orignalDir.x, orignalDir.y, -orignalDir.z));
+        KillSelf();
     }
 }

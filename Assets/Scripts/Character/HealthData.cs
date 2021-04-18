@@ -8,7 +8,7 @@ public class HealthData
     [SerializeField] public MyRangeInt HP;
     [SerializeField] public MyRangeInt MP;
 
-    public HealthData(MyRangeInt HP_, MyRangeInt MP_)
+    public HealthData(MyRangeInt HP_, MyRangeInt MP_ = default(MyRangeInt))
     {
         HP = HP_;
         MP = MP_;
@@ -40,5 +40,10 @@ public class HealthData
     public int GetMaxMP()
     {
         return MP.max;
+    }
+
+    public override string ToString()
+    {
+        return $"HP[{HP.min}, {HP.max}]:{HP.value}\nMP[{MP.min}, {MP.max}]:{MP.value}";
     }
 }

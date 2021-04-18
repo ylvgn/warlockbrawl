@@ -31,9 +31,8 @@ public class HUD : MonoBehaviour
     void Update()
     {
         if (owner == null) return;
-        int maxHP = healthData.GetMaxHP();
-        if (maxHP <= 0) return;
-        if (owner.GetHP() != maxHP)
+        if (healthData.GetMaxHP() <= 0) return;
+        if (owner.GetHP() != healthData.HP.value)
         {
             SetData(owner.GetHP());
         }

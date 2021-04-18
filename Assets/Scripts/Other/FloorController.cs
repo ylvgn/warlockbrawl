@@ -16,10 +16,12 @@ public class FloorController : MonoBehaviour
     public float floorShrinkIntervalTime = 2f;
     public float intervalAddBuffTime = 4f;
     public AnimationCurve animationCurve;
+    public Vector3 center = Vector2.zero;
 
     void Awake()
     {
         characterAddBuffStartTimeDict = new Dictionary<Character, float>();
+        transform.position = center;
     }
 
     public void Init()
@@ -34,37 +36,35 @@ public class FloorController : MonoBehaviour
         if (StatsManager.Instance.CharacterList == null) return;
 
         var characterList = StatsManager.Instance.CharacterList;
-        if (characterList.Count > 0)
+        if (characterList.Count <= 0) return;
+        var v2 = curRadius * curRadius;
+        foreach (var character in characterList)
         {
-            foreach (var character in characterList)
+            float dist2 = (center - character.transform.position).sqrMagnitude;
+            var characterData = character.CharacterData;
+            var buffData = characterData.GetBuffData(BuffType.DropHP);
+            Debug.DrawLine(Vector3.zero, character.transform.position, Color.green);
+            if (dist2 >= v2) // 站岩浆越久，扣血越多
             {
-                float dist = Vector3.Distance(Vector3.zero, character.transform.position);
-                var characterData = character.CharacterData;
-                var buffData = characterData.GetBuffData(BuffType.DropHP);
-                Debug.DrawLine(Vector3.zero, character.transform.position, Color.green);
-                if (dist >= curRadius) // 站岩浆越久，扣血越多
+                float startTime;
+                if (characterAddBuffStartTimeDict.TryGetValue(character, out startTime))
                 {
-                    float startTime;
-                    if (characterAddBuffStartTimeDict.TryGetValue(character, out startTime))
-                    {
-                        if (startTime + intervalAddBuffTime < Time.realtimeSinceStartup)
-                        {
-                            character.PutOnBuff(MakeBuffData(character));
-                            characterAddBuffStartTimeDict[character] = Time.realtimeSinceStartup;
-                        }
-                    }
-                    else
-                    {
-                        characterAddBuffStartTimeDict.Add(character, Time.realtimeSinceStartup);
-                        character.PutOnBuff(MakeBuffData(character));
-                    }
+                    if (startTime + intervalAddBuffTime > Time.realtimeSinceStartup) continue;
+                    var addBuffData = ResManager.Instance.BuildBuffData<DropHPBuffData>(BuffType.DropHP, character);
+                    character.PutOnBuff(addBuffData);
+                    characterAddBuffStartTimeDict[character] = Time.realtimeSinceStartup;
                 }
-                else if (buffData != null)
-                {   
-                    // 回到地面
-                    characterAddBuffStartTimeDict.Remove(character);
+                else
+                {
+                    var addBuffData = ResManager.Instance.BuildBuffData<DropHPBuffData>(BuffType.DropHP, character);
+                    characterAddBuffStartTimeDict.Add(character, Time.realtimeSinceStartup);
+                    character.PutOnBuff(addBuffData);
+                }
+            }
+            else if (buffData != null) // 回到地面
+            {
+                if (characterAddBuffStartTimeDict.Remove(character))
                     characterData.TakeOffBuff(BuffType.DropHP);
-                }
             }
         }
     }
@@ -86,7 +86,6 @@ public class FloorController : MonoBehaviour
                 TimerManager.Instance.RemoveTimer(timerId);
             } else
             {
-                // y - y0 = m * (x - x0)
                 float x = animationCurve.Evaluate(testFloat);
                 float y = m * (x - 0.1f) + 1;
                 curRadius = maxRadius / y; // shader[0.1, 1] <-> floor[1, 9]
@@ -99,16 +98,9 @@ public class FloorController : MonoBehaviour
 
     void OnDrawGizmos()
     {
-        var oldColor = Gizmos.color;
         if (!isEnable) return;
         Gizmos.color = new Color(1, 1, 0, 0.5f);
         Gizmos.DrawSphere(transform.position, curRadius);
-        Gizmos.color = oldColor;
-    }
-
-    DropHPBuffData MakeBuffData(Character owner) // tmp
-    {
-        return new DropHPBuffData(owner, 100, 3, 5);
     }
 
 #if UNITY_EDITOR

@@ -45,6 +45,13 @@ public class UISkillPanel : MonoBehaviour
         _skillIdToItemIndex[skillId] = index;
     }
 
+    public void Init(CharacterData characterData)
+    {
+        var skillDataList = characterData.GetAllSkillData();
+        for (int i = 0; i < skillDataList.Count; i++)
+            AddSkill(skillDataList[i]);
+    }
+
     public void OnSelectSkill(int skillId)
     {
         if (PlayerController.Instance == null || PlayerController.Instance.character == null)
@@ -104,6 +111,12 @@ public class UISkillPanel : MonoBehaviour
 
     void Update()
     {
+        if (PlayerController.Instance == null || PlayerController.Instance.character == null)
+        {
+            Debug.LogError("[Update] PlayerController not init ok");
+            return;
+        }
+
         for (int i = 0; i < SkillSlotCount; i ++)
         {
             var keyCode = MyShortCutKeyCodes[i];

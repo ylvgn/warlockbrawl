@@ -5,42 +5,44 @@ using UnityEngine;
 public class GameEntry : MonoBehaviour
 {
     public UISkillPanel UISkillPanel;
+    public GameObject UIIndicatorPrefab;
+    public MyCharacterScriptableObject CharacterScriptableObjectData;
+    public MySpawnPointsScriptableObject CharacterSpawnPointsScriptableObject;
 
-    // Config tmp
-    public static Dictionary<string, System.Func<SkillData>> MySkillConfig = new Dictionary<string, System.Func<SkillData>>()
+    Vector3 GetRandomSpawnPoint()
     {
-        { "FireBall", () => { return new SkillData(1, "Fireball", "Effect/FireBall", 3, 10, 1, 10, RangeType.DirectLine); } },
-        { "SnowStorm", () => { return new SkillData(2, "SnowStorm", "Effect/SnowStorm", 5, 15, 3, 10, RangeType.Circle, 10, 2); } },
-        { "ArmorBarrier", () => { return new SkillData(3, "ArmorHalo", "Effect/ArmorBarrier", 5, 0, 0, 0, RangeType.None, 10); } },
-    };
+        if (CharacterSpawnPointsScriptableObject == null) return Vector3.zero;
+        var SpawnList = CharacterSpawnPointsScriptableObject.Values;
+        if (SpawnList.Length == 0) return Vector3.zero;
+        int t = Random.Range(0, 1000 + (int)Time.time);
+        var pos = SpawnList[t % SpawnList.Length];
+        return new Vector3(pos.x, pos.y, pos.z);
+    }
 
     void Start()
     {
-        // Test Data
-        List<SkillData> skillList = new List<SkillData>()
-        {
-            MySkillConfig["FireBall"](),
-            MySkillConfig["SnowStorm"](),
-            MySkillConfig["ArmorBarrier"](),
-        };
-        CharacterData characterData = new CharacterData("MyCharacter");
-
-        var myCharacter = ResManager.Instance.CreateCharacter(characterData, "Assets/Resources/Player/Animators/Mage.controller");
-        foreach(var skillData in skillList) {
-            myCharacter.LearnSkill(skillData);
-            UISkillPanel.AddSkill(skillData);
+        if (CharacterScriptableObjectData == null) {
+            Debug.LogError("CharacterScriptableObjectData == null");
+            return;
+        }
+        if (UIIndicatorPrefab == null) {
+            Debug.LogError("UIIndicatorPrefab == null");
+            return;
+        }
+        if (UISkillPanel == null) {
+            Debug.LogError("UISkillPanel == null");
+            return;
         }
 
-        ResManager.Instance.BuildHUD(myCharacter, myCharacter.CharacterData.health);
-        ResManager.Instance.BuildSkillIndicator(myCharacter);
+        // MyCharacter
+        var myCharacter = ResManager.Instance.CreateCharacter(CharacterScriptableObjectData.Values[0], GetRandomSpawnPoint());
+        GameObject.Instantiate<GameObject>(UIIndicatorPrefab, myCharacter.transform);
         myCharacter.gameObject.AddComponent<PlayerController>();
+        UISkillPanel.Init(myCharacter.CharacterData);
 
         // AI
-        CharacterData AICharacterData = new CharacterData("MyAICharacter");
-        var myAICharacter = ResManager.Instance.CreateCharacter(AICharacterData, "Assets/Resources/Player/Animators/AIMage.controller");
-        myAICharacter.SetData(AICharacterData);                                        
-        myAICharacter.LearnSkill(MySkillConfig["FireBall"]());
-        ResManager.Instance.BuildHUD(myAICharacter, myAICharacter.CharacterData.health);
+        var myAICharacter = ResManager.Instance.CreateCharacter(CharacterScriptableObjectData.Values[1], GetRandomSpawnPoint());
+        myAICharacter.SetData(myAICharacter.CharacterData);
         myAICharacter.gameObject.AddComponent<AIController>();
 
         // stats

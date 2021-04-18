@@ -17,41 +17,42 @@ public enum BuffType
 public abstract class BuffData
 {
     public BuffType type { get; private set; }
-    public IAttackable owner { get; protected set; }
+    public GameObject caster { get; private set; } // tmp
+    public IAttackable target { get; protected set; }
     public string name { get; protected set; }
     public float duringTime {get; protected set; }
     public float intervalTime { get; protected set; }
     public float startTime { get; protected set; }
+    public float delayTime { get; protected set; }
     public BuffMode BuffMode { get; protected set; }
-    public bool canOverlay { get; protected set; } // 是否可叠加buff
+    public bool canStackUp { get; protected set; }
     public bool isEnable { get; protected set; }
+    public int damage { get; protected set; }
 
-    public BuffData(BuffType type_, IAttackable owner_, float duringTime_, BuffMode buffMode_ = BuffMode.Static, float intervalTime_ = 0)
+    public BuffData(MyBuffScriptableObject.Buff scriptableObject, IAttackable target_)
     {
-        if (duringTime_ <= 0) {
-            Debug.LogError("[BuffData} 传入duringTime 必须是正数！duringTime=" + duringTime_);
+        type = scriptableObject.type;
+        name = scriptableObject.name;
+        BuffMode = scriptableObject.BuffMode;
+        duringTime = scriptableObject.duringTime;
+        if (duringTime <= 0) {
+            Debug.LogError($"[BuffData] 传入duringTime必须是正数！duringTime={duringTime}");
         }
-
-        if (buffMode_ == BuffMode.PerSingleSecond && intervalTime_ <= 0) {
-            Debug.LogError("[BuffData} 传入intervalTime 必须是正数！intervalTime=" + intervalTime_);
+        intervalTime = scriptableObject.intervalTime;
+        if (BuffMode == BuffMode.PerSingleSecond && intervalTime <= 0) {
+            Debug.LogError($"[BuffData] 传入intervalTime必须为正数！intervalTime={intervalTime}");
         }
-
-        type = type_;
-        name = type_.ToString();
-        owner = owner_;
-        BuffMode = buffMode_;
-        duringTime = duringTime_;
-        intervalTime = intervalTime_;
-        startTime = Time.realtimeSinceStartup;
+        delayTime = Mathf.Min(scriptableObject.delayTime, intervalTime);
+        startTime = Time.realtimeSinceStartup + delayTime;
+        damage = scriptableObject.damage;
+        target = target_;
         isEnable = true;
     }
 
     public virtual bool CanHandle()
     {
-        if (owner == null)
-        {
-            Debug.LogError($"[{type}]未初始化完成");
-        }
+        if (target == null)
+            Debug.LogError($"[CanHandle] 未初始化完成: {type}");
         if (!isEnable) return false;
         if (IsObsolete()) return false;
         return true;
@@ -62,9 +63,9 @@ public abstract class BuffData
         return Time.realtimeSinceStartup > startTime + duringTime;
     }
 
-    public virtual void OverlayBuff(BuffData buffData)
+    public virtual void StackUpBuff(BuffData buffData)
     {
-        if (!canOverlay) return;
+        if (!canStackUp) return;
         if (IsObsolete()) {
             duringTime = buffData.duringTime;
             intervalTime = buffData.intervalTime;
@@ -73,7 +74,8 @@ public abstract class BuffData
         isEnable = true;
     }
 
-    public virtual void KillSelf() {
+    public virtual void KillSelf()
+    {
         isEnable = false;
     }
 
@@ -85,13 +87,13 @@ public abstract class BuffData
             return;
         }
 
-        if (buffData.owner == null)
+        if (buffData.target == null)
         {
-            Debug.LogError("[BuffData] ResetData 传入的owner == null");
+            Debug.LogError("[BuffData] ResetData 传入的target == null");
             return;
         }
 
-        owner = buffData.owner;
+        target = buffData.target;
         duringTime = buffData.duringTime;
         intervalTime = buffData.intervalTime;
         startTime = Time.realtimeSinceStartup;
@@ -99,4 +101,9 @@ public abstract class BuffData
     }
 
     public abstract void Handle();
+
+    public override string ToString()
+    {
+        return $"buff:{name} target:{target} isEnable:{isEnable}";
+    }
 }

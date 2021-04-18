@@ -11,10 +11,10 @@ public class ArmorBarrier : SkillMountBuff
         transform.SetParent(owner.transform);
         var skillData = skillMountBuffData_.skillData;
         float height = owner.characterController.height;
-        transform.localPosition = Vector3.zero + new Vector3(0, height / 2.0f, 0);
+        transform.localPosition = new Vector3(0, height * 0.5f, 0);
         if (SkillMountBuffData.buffData == null)
         {
-            var buffData = new ArmorBarrierBuffData(owner, skillData.durationTime);
+            var buffData = ResManager.Instance.BuildBuffData<ArmorBarrierBuffData>(BuffType.ArmorBarrier, owner);
             owner.PutOnBuff(buffData);
             SkillMountBuffData.SetBuffData(buffData);
         }
