@@ -75,25 +75,25 @@ public class UISkillIndicator : MonoBehaviour
         isEnable = true;
     }
 
-    public void Show(RaycastHit hit, Transform player)
+    public void Show(Vector3 hitPoint, Transform player)
     {
         if (!isEnable) return;
         float skillRange = curSkillData.maxRange;
         float skillRadius = curSkillData.maxRadius;
-        var dir = (hit.point - player.position).normalized;
+        var dir = (hitPoint - player.position).normalized;
 
         switch (curSkillData.RangeType)
         {
             case RangeType.None:
                 break;
             case RangeType.Point:
-                indicatorImg.transform.position = hit.point;
-                Debug.DrawLine(player.position, hit.point, Color.red);
+                indicatorImg.transform.position = hitPoint;
+                Debug.DrawLine(player.position, hitPoint, Color.red);
                 break;
             case RangeType.ArcShaped:
                 break;
             case RangeType.Circle:
-                float distance = Vector3.Distance(player.position, hit.point);
+                float distance = Vector3.Distance(player.position, hitPoint);
                 if (distance >= skillRange / 2.0f) distance = skillRange / 2.0f;
                 Debug.DrawLine(player.position, player.position + dir.normalized * distance, Color.red);
                 indicatorImg.transform.position = player.position + dir.normalized * distance;
@@ -104,7 +104,7 @@ public class UISkillIndicator : MonoBehaviour
                 var angle = rotation.eulerAngles;
                 indicatorImg.transform.rotation = Quaternion.Euler(90, angle.y, 0);
                 indicatorImg.transform.position = player.position + (dir * skillRange / 2.0f);
-                Debug.DrawLine(player.position, hit.point, Color.red);
+                Debug.DrawLine(player.position, hitPoint, Color.red);
                 break;
             default:
                 break;
