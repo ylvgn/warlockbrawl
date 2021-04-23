@@ -91,7 +91,6 @@ public class FloorController : MonoBehaviour
                 curRadius = maxRadius / y; // shader[0.1, 1] <-> floor[1, 9]
                 testFloat += stepFloat;
                 Shader.SetGlobalFloat("testFloat", x);
-                //Debug.Log($"缩圈: f({testFloat})={x}, timerId={timerId}, fenmu={y}, curRadius={curRadius}");
             }
         });
     }
@@ -123,6 +122,8 @@ public class FloorController : MonoBehaviour
         GUI.Label(new Rect(0, posY, groupWidth, height), $"掉血叠加buff间隔时间 : {intervalAddBuffTime}s");
         posY += spacingY;
         intervalAddBuffTime = GUI.HorizontalSlider(new Rect(0, posY, groupWidth, height), intervalAddBuffTime, 0.1f, 10f);
+        posY += spacingY;
+        GUI.Label(new Rect(0, posY, groupWidth, height), $"当前缩圈半径: {curRadius}");
         GUI.EndGroup();
     }
 #endif
